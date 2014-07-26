@@ -10,7 +10,7 @@ import (
 	"azul3d.org/gfx.v1"
 	"azul3d.org/gfx/gl2.v1"
 	"azul3d.org/gfx/window.v1"
-	"azul3d.org/lmath.v1"
+	math "azul3d.org/lmath.v1"
 	"image"
 	_ "image/jpeg"
 	"log"

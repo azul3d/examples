@@ -10,7 +10,7 @@ import (
 	"azul3d.org/gfx.v1"
 	"azul3d.org/gfx/window.v1"
 	"azul3d.org/keyboard.v1"
-	"azul3d.org/lmath.v1"
+	math "azul3d.org/lmath.v1"
 	"fmt"
 	"image"
 	"image/png"

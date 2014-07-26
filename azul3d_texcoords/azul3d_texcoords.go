@@ -9,7 +9,7 @@ import (
 	"azul3d.org/chippy.v1"
 	"azul3d.org/gfx.v1"
 	"azul3d.org/gfx/window.v1"
-	"azul3d.org/lmath.v1"
+	math "azul3d.org/lmath.v1"
 	"image"
 	"log"
 	"os"
