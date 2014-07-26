@@ -67,7 +67,7 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 	shader.GLSLFrag = glslFrag
 
 	// Load the picture.
-	f, err := os.Open("src/azul3d.org/v1/assets/textures/texture_coords_1024x1024.png")
+	f, err := os.Open("src/azul3d.org/examples.v1/assets/textures/texture_coords_1024x1024.png")
 	if err != nil {
 		log.Fatal(err)
 	}

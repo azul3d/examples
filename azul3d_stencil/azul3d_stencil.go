@@ -222,7 +222,7 @@ func shapeSpawner(r gfx.Renderer, shader *gfx.Shader, camera *gfx.Camera) {
 		}
 
 		// Create a shape.
-		shape := createShape(r, "src/azul3d.org/v1/assets/textures/shapes.png", which)
+		shape := createShape(r, "src/azul3d.org/examples.v1/assets/textures/shapes.png", which)
 		shape.Shader = shader
 		shape.SetPos(math.Vec3{0, -1, 0})
 
@@ -287,7 +287,7 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 	shader.GLSLFrag = glslFrag
 
 	// Create the background.
-	bgPicture := createPicture(r, "src/azul3d.org/v1/assets/textures/yi_han_cheol.jpg")
+	bgPicture := createPicture(r, "src/azul3d.org/examples.v1/assets/textures/yi_han_cheol.jpg")
 	bgPicture.Shader = shader
 
 	// Create a camera.
@@ -306,7 +306,7 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 		c.Unlock()
 
 		// Clear the entire area (empty rectangle means "the whole area").
-		r.Clear(image.Rect(0, 0, 0, 0), gfx.Color{0, 0, 0, 0})
+		r.Clear(image.Rect(0, 0, 0, 0), gfx.Color{0, 0, 0, 1})
 		r.ClearDepth(image.Rect(0, 0, 0, 0), 1.0)
 		r.ClearStencil(image.Rect(0, 0, 0, 0), 0)
 
