@@ -9,7 +9,7 @@ import (
 	"azul3d.org/chippy.v1"
 	"azul3d.org/gfx.v1"
 	"azul3d.org/gfx/window.v1"
-	math "azul3d.org/lmath.v1"
+	"azul3d.org/lmath.v1"
 	"image"
 	"log"
 	"os"
@@ -59,7 +59,7 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 	camera.SetOrtho(r.Bounds(), camNear, camFar)
 
 	// Move the camera back two units away from the card.
-	camera.SetPos(math.Vec3{0, -2, 0})
+	camera.SetPos(lmath.Vec3{0, -2, 0})
 
 	// Create a simple shader.
 	shader := gfx.NewShader("SimpleShader")
@@ -136,11 +136,11 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 	for {
 		// Center the card in the window.
 		b := r.Bounds()
-		card.SetPos(math.Vec3{float64(b.Dx()) / 2.0, 0, float64(b.Dy()) / 2.0})
+		card.SetPos(lmath.Vec3{float64(b.Dx()) / 2.0, 0, float64(b.Dy()) / 2.0})
 
 		// Scale the card to fit the window.
 		s := float64(b.Dy()) / 2.0 // Card is two units wide, so divide by two.
-		card.SetScale(math.Vec3{s, s, s})
+		card.SetScale(lmath.Vec3{s, s, s})
 
 		// Clear the entire area (empty rectangle means "the whole area").
 		r.Clear(image.Rect(0, 0, 0, 0), gfx.Color{1, 1, 1, 1})
