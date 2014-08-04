@@ -9,6 +9,7 @@ import (
 	"azul3d.org/chippy.v1"
 	"azul3d.org/gfx.v1"
 	"azul3d.org/gfx/window.v1"
+	"azul3d.org/keyboard.v1"
 	"azul3d.org/lmath.v1"
 	"image"
 	"log"
@@ -122,13 +123,25 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 
 	go func() {
 		for e := range w.Events() {
-			switch e.(type) {
+			switch ev := e.(type) {
 			case chippy.ResizedEvent:
 				// Update the camera's projection matrix for the new width and
 				// height.
 				camera.Lock()
 				camera.SetOrtho(r.Bounds(), camNear, camFar)
 				camera.Unlock()
+
+			case keyboard.TypedEvent:
+				if ev.Rune == 'm' || ev.Rune == 'M' {
+					// Toggle mipmapping on the texture.
+					tex.Lock()
+					if tex.MinFilter == gfx.LinearMipmapLinear {
+						tex.MinFilter = gfx.Linear
+					} else {
+						tex.MinFilter = gfx.LinearMipmapLinear
+					}
+					tex.Unlock()
+				}
 			}
 		}
 	}()
