@@ -25,6 +25,25 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 	fmt.Println("OcclusionQueryBits =", gpu.OcclusionQueryBits)
 	fmt.Println("MaxTextureSize =", gpu.MaxTextureSize)
 	fmt.Println("NPOT Textures =", gpu.NPOT)
+
+	fmt.Printf("%d Render-To-Texture MSAA Formats:\n", len(gpu.RTTFormats.Samples))
+	for i, sampleCount := range gpu.RTTFormats.Samples {
+		fmt.Printf("    %d. %dx MSAA\n", i+1, sampleCount)
+	}
+
+	fmt.Printf("%d Render-To-Texture Color Formats:\n", len(gpu.RTTFormats.ColorFormats))
+	for i, f := range gpu.RTTFormats.ColorFormats {
+		fmt.Printf("    %d. %+v\n", i+1, f)
+	}
+	fmt.Printf("%d Render-To-Texture Depth Formats:\n", len(gpu.RTTFormats.DepthFormats))
+	for i, f := range gpu.RTTFormats.DepthFormats {
+		fmt.Printf("    %d. %+v\n", i+1, f)
+	}
+	fmt.Printf("%d Render-To-Texture Stencil Formats:\n", len(gpu.RTTFormats.StencilFormats))
+	for i, f := range gpu.RTTFormats.StencilFormats {
+		fmt.Printf("    %d. %+v\n", i+1, f)
+	}
+
 	fmt.Println("AlphaToCoverage =", gpu.AlphaToCoverage)
 	fmt.Println("GLSLMaxVaryingFloats =", gpu.GLSLMaxVaryingFloats)
 	fmt.Println("GLSLMaxVertexInputs =", gpu.GLSLMaxVertexInputs)
