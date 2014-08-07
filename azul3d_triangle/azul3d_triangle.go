@@ -74,47 +74,47 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 	shader.GLSLVert = glslVert
 	shader.GLSLFrag = glslFrag
 
+	// Create a triangle mesh.
+	triMesh := gfx.NewMesh()
+	triMesh.Vertices = []gfx.Vec3{
+		// Top
+		{0, 0, 1},
+		{-.5, 0, 0},
+		{.5, 0, 0},
+
+		// Bottom-Left
+		{-.5, 0, 0},
+		{-1, 0, -1},
+		{0, 0, -1},
+
+		// Bottom-Right
+		{.5, 0, 0},
+		{0, 0, -1},
+		{1, 0, -1},
+	}
+	triMesh.Colors = []gfx.Color{
+		// Top
+		{1, 0, 0, 1},
+		{0, 1, 0, 1},
+		{0, 0, 1, 1},
+
+		// Bottom-Left
+		{1, 0, 0, 1},
+		{0, 1, 0, 1},
+		{0, 0, 1, 1},
+
+		// Bottom-Right
+		{1, 0, 0, 1},
+		{0, 1, 0, 1},
+		{0, 0, 1, 1},
+	}
+
 	// Create a triangle object.
 	triangle := gfx.NewObject()
 	triangle.Shader = shader
 	triangle.OcclusionTest = true
 	triangle.State.FaceCulling = gfx.NoFaceCulling
-	triangle.Meshes = []*gfx.Mesh{
-		&gfx.Mesh{
-			Vertices: []gfx.Vec3{
-				// Top
-				{0, 0, 1},
-				{-.5, 0, 0},
-				{.5, 0, 0},
-
-				// Bottom-Left
-				{-.5, 0, 0},
-				{-1, 0, -1},
-				{0, 0, -1},
-
-				// Bottom-Right
-				{.5, 0, 0},
-				{0, 0, -1},
-				{1, 0, -1},
-			},
-			Colors: []gfx.Color{
-				// Top
-				{1, 0, 0, 1},
-				{0, 1, 0, 1},
-				{0, 0, 1, 1},
-
-				// Bottom-Left
-				{1, 0, 0, 1},
-				{0, 1, 0, 1},
-				{0, 0, 1, 1},
-
-				// Bottom-Right
-				{1, 0, 0, 1},
-				{0, 1, 0, 1},
-				{0, 0, 1, 1},
-			},
-		},
-	}
+	triangle.Meshes = []*gfx.Mesh{triMesh}
 
 	// Transforms from different objects can be parented to one another to
 	// create complex transformations (in this case we rotate -45 degrees then

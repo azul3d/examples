@@ -79,37 +79,35 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 	}
 
 	// Create new texture.
-	tex := &gfx.Texture{
-		Source:    img,
-		MinFilter: gfx.LinearMipmapLinear,
-		MagFilter: gfx.Linear,
-		Format:    gfx.DXT1RGBA,
-	}
+	tex := gfx.NewTexture()
+	tex.Source = img
+	tex.MinFilter = gfx.LinearMipmapLinear
+	tex.MagFilter = gfx.Linear
+	tex.Format = gfx.DXT1RGBA
 
 	// Create a card mesh.
-	cardMesh := &gfx.Mesh{
-		Vertices: []gfx.Vec3{
-			// Bottom-left triangle.
-			{-1, 0, -1},
-			{1, 0, -1},
-			{-1, 0, 1},
+	cardMesh := gfx.NewMesh()
+	cardMesh.Vertices = []gfx.Vec3{
+		// Bottom-left triangle.
+		{-1, 0, -1},
+		{1, 0, -1},
+		{-1, 0, 1},
 
-			// Top-right triangle.
-			{-1, 0, 1},
-			{1, 0, -1},
-			{1, 0, 1},
-		},
-		TexCoords: []gfx.TexCoordSet{
-			{
-				Slice: []gfx.TexCoord{
-					{0, 1},
-					{1, 1},
-					{0, 0},
+		// Top-right triangle.
+		{-1, 0, 1},
+		{1, 0, -1},
+		{1, 0, 1},
+	}
+	cardMesh.TexCoords = []gfx.TexCoordSet{
+		{
+			Slice: []gfx.TexCoord{
+				{0, 1},
+				{1, 1},
+				{0, 0},
 
-					{0, 0},
-					{1, 1},
-					{1, 0},
-				},
+				{0, 0},
+				{1, 1},
+				{1, 0},
 			},
 		},
 	}

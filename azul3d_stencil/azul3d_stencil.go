@@ -56,7 +56,7 @@ void main()
 
 // Creates and returns a card mesh.
 func cardMesh(w, h float32) *gfx.Mesh {
-	m := new(gfx.Mesh)
+	m := gfx.NewMesh()
 	m.Vertices = []gfx.Vec3{
 		// Left triangle.
 		{-w, 0, h},  // Left-Top
@@ -99,19 +99,18 @@ func createPicture(r gfx.Renderer, path string) *gfx.Object {
 	}
 
 	// Create new texture and ask the renderer to load it.
-	tex := &gfx.Texture{
-		Source:    img,
-		MinFilter: gfx.LinearMipmapLinear,
-		MagFilter: gfx.Linear,
-		Format:    gfx.DXT1,
-	}
+	tex := gfx.NewTexture()
+	tex.Source = img
+	tex.MinFilter = gfx.LinearMipmapLinear
+	tex.MagFilter = gfx.Linear
+	tex.Format = gfx.DXT1
 	aspect := float32(img.Bounds().Dx()) / float32(img.Bounds().Dy())
 	var height float32 = 1.0
 
 	// Create a card object.
 	cardMesh := cardMesh(aspect, height)
 	cardMesh.TexCoords = []gfx.TexCoordSet{
-		gfx.TexCoordSet{
+		{
 			Slice: cardTexCoords(0, 0, 1, 1),
 		},
 	}
@@ -148,17 +147,16 @@ func createShape(r gfx.Renderer, path string, which int) *gfx.Object {
 	}
 
 	// Create new texture and ask the renderer to load it.
-	tex := &gfx.Texture{
-		Source:    img,
-		MinFilter: gfx.LinearMipmapLinear,
-		MagFilter: gfx.Linear,
-		Format:    gfx.DXT1RGBA,
-	}
+	tex := gfx.NewTexture()
+	tex.Source = img
+	tex.MinFilter = gfx.LinearMipmapLinear
+	tex.MagFilter = gfx.Linear
+	tex.Format = gfx.DXT1RGBA
 
 	// Create a card object.
 	cardMesh := cardMesh(1.0, 1.0)
 	cardMesh.TexCoords = []gfx.TexCoordSet{
-		gfx.TexCoordSet{
+		{
 			Slice: shapeTexCoords(which),
 		},
 	}

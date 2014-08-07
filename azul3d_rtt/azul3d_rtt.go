@@ -101,29 +101,28 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 	shader.GLSLFrag = glslFrag
 
 	// Create a card mesh.
-	cardMesh := &gfx.Mesh{
-		Vertices: []gfx.Vec3{
-			// Bottom-left triangle.
-			{-1, 0, -1},
-			{1, 0, -1},
-			{-1, 0, 1},
+	cardMesh := gfx.NewMesh()
+	cardMesh.Vertices = []gfx.Vec3{
+		// Bottom-left triangle.
+		{-1, 0, -1},
+		{1, 0, -1},
+		{-1, 0, 1},
 
-			// Top-right triangle.
-			{-1, 0, 1},
-			{1, 0, -1},
-			{1, 0, 1},
-		},
-		TexCoords: []gfx.TexCoordSet{
-			{
-				Slice: []gfx.TexCoord{
-					{0, 1},
-					{1, 1},
-					{0, 0},
+		// Top-right triangle.
+		{-1, 0, 1},
+		{1, 0, -1},
+		{1, 0, 1},
+	}
+	cardMesh.TexCoords = []gfx.TexCoordSet{
+		{
+			Slice: []gfx.TexCoord{
+				{0, 1},
+				{1, 1},
+				{0, 0},
 
-					{0, 0},
-					{1, 1},
-					{1, 0},
-				},
+				{0, 0},
+				{1, 1},
+				{1, 0},
 			},
 		},
 	}

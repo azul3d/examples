@@ -56,40 +56,40 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 	shader.GLSLVert = glslVert
 	shader.GLSLFrag = glslFrag
 
+	// Create a card mesh.
+	cardMesh := gfx.NewMesh()
+	cardMesh.Vertices = []gfx.Vec3{
+		// Left triangle.
+		{-1, 1, 0},  // Left-Top
+		{-1, -1, 0}, // Left-Bottom
+		{1, -1, 0},  // Right-Bottom
+
+		// Right triangle.
+		{-1, 1, 0}, // Left-Top
+		{1, -1, 0}, // Right-Bottom
+		{1, 1, 0},  // Right-Top
+	}
+	cardMesh.TexCoords = []gfx.TexCoordSet{
+		{
+			Slice: []gfx.TexCoord{
+				// Left triangle.
+				{0, 0},
+				{0, 1},
+				{1, 1},
+
+				// Right triangle.
+				{0, 0},
+				{1, 1},
+				{1, 0},
+			},
+		},
+	}
+
 	// Create a card object.
 	card := gfx.NewObject()
 	card.Shader = shader
 	card.Textures = []*gfx.Texture{nil}
-	card.Meshes = []*gfx.Mesh{
-		&gfx.Mesh{
-			Vertices: []gfx.Vec3{
-				// Left triangle.
-				{-1, 1, 0},  // Left-Top
-				{-1, -1, 0}, // Left-Bottom
-				{1, -1, 0},  // Right-Bottom
-
-				// Right triangle.
-				{-1, 1, 0}, // Left-Top
-				{1, -1, 0}, // Right-Bottom
-				{1, 1, 0},  // Right-Top
-			},
-			TexCoords: []gfx.TexCoordSet{
-				gfx.TexCoordSet{
-					Slice: []gfx.TexCoord{
-						// Left triangle.
-						{0, 0},
-						{0, 1},
-						{1, 1},
-
-						// Right triangle.
-						{0, 0},
-						{1, 1},
-						{1, 0},
-					},
-				},
-			},
-		},
-	}
+	card.Meshes = []*gfx.Mesh{cardMesh}
 
 	// Create a texture.
 	zoom := 1.0
@@ -111,11 +111,11 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 
 		// Create new texture and ask the renderer to load it. We don't use DXT
 		// compression because those textures cannot be downloaded.
-		tex := &gfx.Texture{
-			Source:    mbrot,
-			MinFilter: gfx.Nearest,
-			MagFilter: gfx.Nearest,
-		}
+		tex := gfx.NewTexture()
+		tex.Source = mbrot
+		tex.MinFilter = gfx.Nearest
+		tex.MagFilter = gfx.Nearest
+
 		onLoad := make(chan *gfx.Texture, 1)
 		r.LoadTexture(tex, onLoad)
 		<-onLoad
