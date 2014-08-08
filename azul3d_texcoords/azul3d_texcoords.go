@@ -14,7 +14,29 @@ import (
 	"image"
 	"log"
 	"os"
+	"path/filepath"
 )
+
+// This helper function is not an important example concept, please ignore it.
+//
+// absPath the absolute path to an file given one relative to the examples
+// directory:
+//  $GOPATH/src/azul3d.org/examples.v1
+var examplesDir string
+
+func absPath(relPath string) string {
+	if len(examplesDir) == 0 {
+		// Find assets directory.
+		for _, path := range filepath.SplitList(os.ExpandEnv("$GOPATH")) {
+			path = filepath.Join(path, "src/azul3d.org/examples.v1")
+			if _, err := os.Stat(path); err == nil {
+				examplesDir = path
+				break
+			}
+		}
+	}
+	return filepath.Join(examplesDir, relPath)
+}
 
 var glslVert = []byte(`
 #version 120
@@ -68,7 +90,7 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 	shader.GLSLFrag = glslFrag
 
 	// Load the picture.
-	f, err := os.Open("src/azul3d.org/examples.v1/assets/textures/texture_coords_1024x1024.png")
+	f, err := os.Open(absPath("assets/textures/texture_coords_1024x1024.png"))
 	if err != nil {
 		log.Fatal(err)
 	}
