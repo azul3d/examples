@@ -6,15 +6,16 @@
 package main
 
 import (
+	"image"
+	"log"
+	"os"
+	"path/filepath"
+
 	"azul3d.org/chippy.v1"
 	"azul3d.org/gfx.v1"
 	"azul3d.org/gfx/window.v1"
 	"azul3d.org/keyboard.v1"
 	"azul3d.org/lmath.v1"
-	"image"
-	"log"
-	"os"
-	"path/filepath"
 )
 
 // This helper function is not an important example concept, please ignore it.

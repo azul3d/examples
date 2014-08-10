@@ -6,11 +6,6 @@
 package main
 
 import (
-	"azul3d.org/chippy.v1"
-	"azul3d.org/gfx.v1"
-	"azul3d.org/gfx/gl2.v1"
-	"azul3d.org/gfx/window.v1"
-	math "azul3d.org/lmath.v1"
 	"image"
 	_ "image/jpeg"
 	"log"
@@ -19,6 +14,12 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+
+	"azul3d.org/chippy.v1"
+	"azul3d.org/gfx.v1"
+	"azul3d.org/gfx/gl2.v1"
+	"azul3d.org/gfx/window.v1"
+	math "azul3d.org/lmath.v1"
 )
 
 // This helper function is not an important example concept, please ignore it.

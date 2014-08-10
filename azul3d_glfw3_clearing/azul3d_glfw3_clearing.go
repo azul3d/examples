@@ -7,14 +7,16 @@
 package main
 
 import (
+	"fmt"
+	"image"
+	"os"
+	"runtime"
+	"time"
+
 	"azul3d.org/clock.v1"
 	"azul3d.org/gfx.v1"
 	"azul3d.org/gfx/gl2.v1"
-	"fmt"
 	"github.com/go-gl/glfw3"
-	"image"
-	"runtime"
-	"time"
 )
 
 func errorCallback(err glfw3.ErrorCode, desc string) {

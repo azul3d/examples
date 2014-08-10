@@ -7,13 +7,14 @@
 package main
 
 import (
-	"azul3d.org/gfx.v1"
-	"azul3d.org/gfx/gl2.v1"
 	"fmt"
-	"gopkg.in/qml.v0"
 	"image"
 	"os"
 	"time"
+
+	"azul3d.org/gfx.v1"
+	"azul3d.org/gfx/gl2.v1"
+	"gopkg.in/qml.v0"
 )
 
 func main() {

@@ -6,11 +6,6 @@
 package main
 
 import (
-	"azul3d.org/chippy.v1"
-	"azul3d.org/gfx.v1"
-	"azul3d.org/gfx/window.v1"
-	"azul3d.org/keyboard.v1"
-	"azul3d.org/mouse.v1"
 	"fmt"
 	"image"
 	"image/color"
@@ -18,6 +13,12 @@ import (
 	"log"
 	gmath "math"
 	"os"
+
+	"azul3d.org/chippy.v1"
+	"azul3d.org/gfx.v1"
+	"azul3d.org/gfx/window.v1"
+	"azul3d.org/keyboard.v1"
+	"azul3d.org/mouse.v1"
 )
 
 var glslVert = []byte(`

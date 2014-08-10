@@ -6,10 +6,11 @@
 package main
 
 import (
+	"image"
+
 	"azul3d.org/chippy.v1"
 	"azul3d.org/gfx.v1"
 	"azul3d.org/gfx/window.v1"
-	"image"
 )
 
 // gfxLoop is responsible for drawing things to the window. This loop must be
