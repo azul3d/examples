@@ -6,6 +6,7 @@
 package main
 
 import (
+	"go/build"
 	"image"
 	"log"
 	"os"
@@ -28,7 +29,7 @@ var examplesDir string
 func absPath(relPath string) string {
 	if len(examplesDir) == 0 {
 		// Find assets directory.
-		for _, path := range filepath.SplitList(os.ExpandEnv("$GOPATH")) {
+		for _, path := range filepath.SplitList(build.Default.GOPATH) {
 			path = filepath.Join(path, "src/azul3d.org/examples.v1")
 			if _, err := os.Stat(path); err == nil {
 				examplesDir = path
