@@ -21,7 +21,7 @@ import (
 	"azul3d.org/keyboard.v1"
 	"azul3d.org/lmath.v1"
 	"azul3d.org/mouse.v1"
-	"azul3d.org/tmx.v1"
+	"azul3d.org/tmx.dev"
 )
 
 // This helper function is not an important example concept, please ignore it.
