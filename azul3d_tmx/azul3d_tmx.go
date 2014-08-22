@@ -28,14 +28,14 @@ import (
 //
 // absPath the absolute path to an file given one relative to the examples
 // directory:
-//  $GOPATH/src/azul3d.org/examples.v1
+//  $GOPATH/src/azul3d.org/examples.dev
 var examplesDir string
 
 func absPath(relPath string) string {
 	if len(examplesDir) == 0 {
 		// Find assets directory.
 		for _, path := range filepath.SplitList(build.Default.GOPATH) {
-			path = filepath.Join(path, "src/azul3d.org/examples.v1")
+			path = filepath.Join(path, "src/azul3d.org/examples.dev")
 			if _, err := os.Stat(path); err == nil {
 				examplesDir = path
 				break
