@@ -268,7 +268,11 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 			samples := triangle.SampleCount()
 
 			// The number of pixels the triangle drew:
-			pixels := samples / r.Precision().Samples
+			msaa := r.Precision().Samples
+			if msaa == 0 {
+				msaa = 1
+			}
+			pixels := samples / msaa
 
 			// The percent of the window that the triangle drew to:
 			bounds := r.Bounds()
