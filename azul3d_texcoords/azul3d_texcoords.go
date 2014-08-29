@@ -7,6 +7,7 @@ package main
 
 import (
 	"go/build"
+	_ "image/png"
 	"image"
 	"log"
 	"os"
