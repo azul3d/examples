@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"azul3d.org/gfx.v1"
-	"azul3d.org/gfx/gl2.v1"
+	"azul3d.org/gfx/gl2.v2"
 	"gopkg.in/qml.v0"
 )
 

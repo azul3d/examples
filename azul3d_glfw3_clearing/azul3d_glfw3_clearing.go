@@ -15,7 +15,7 @@ import (
 
 	"azul3d.org/clock.v1"
 	"azul3d.org/gfx.v1"
-	"azul3d.org/gfx/gl2.v1"
+	"azul3d.org/gfx/gl2.v2"
 	"github.com/go-gl/glfw3"
 )
 
