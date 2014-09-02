@@ -8,14 +8,13 @@ package main
 import (
 	"fmt"
 
-	"azul3d.org/chippy.v1"
 	"azul3d.org/gfx.v1"
-	"azul3d.org/gfx/window.v1"
+	"azul3d.org/gfx/window.v2"
 )
 
 // gfxLoop is responsible for drawing things to the window.
-func gfxLoop(w *chippy.Window, r gfx.Renderer) {
-	defer w.Destroy()
+func gfxLoop(w window.Window, r gfx.Renderer) {
+	defer w.Close()
 
 	gpu := r.GPUInfo()
 	fmt.Println("GPU Name:", gpu.Name)
@@ -53,5 +52,7 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 }
 
 func main() {
-	window.Run(gfxLoop)
+	props := window.NewProps()
+	props.SetVisible(false)
+	window.Run(gfxLoop, props)
 }

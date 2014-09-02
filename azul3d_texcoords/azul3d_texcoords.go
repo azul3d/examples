@@ -7,15 +7,14 @@ package main
 
 import (
 	"go/build"
-	_ "image/png"
 	"image"
+	_ "image/png"
 	"log"
 	"os"
 	"path/filepath"
 
-	"azul3d.org/chippy.v1"
 	"azul3d.org/gfx.v1"
-	"azul3d.org/gfx/window.v1"
+	"azul3d.org/gfx/window.v2"
 	"azul3d.org/keyboard.v1"
 	"azul3d.org/lmath.v1"
 )
@@ -75,9 +74,8 @@ void main()
 }
 `)
 
-// gfxLoop is responsible for drawing things to the window. This loop must be
-// independent of the Chippy main loop.
-func gfxLoop(w *chippy.Window, r gfx.Renderer) {
+// gfxLoop is responsible for drawing things to the window.
+func gfxLoop(w window.Window, r gfx.Renderer) {
 	// Setup a camera to use a perspective projection.
 	camera := gfx.NewCamera()
 	camNear := 0.01
@@ -145,9 +143,15 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 	card.Meshes = []*gfx.Mesh{cardMesh}
 
 	go func() {
-		for e := range w.Events() {
+		// Create a channel of events.
+		events := make(chan window.Event, 256)
+
+		// Have the window notify our channel whenever events occur.
+		w.Notify(events, window.FramebufferResizedEvents|window.KeyboardTypedEvents)
+
+		for e := range events {
 			switch ev := e.(type) {
-			case chippy.ResizedEvent:
+			case window.FramebufferResized:
 				// Update the camera's projection matrix for the new width and
 				// height.
 				camera.Lock()
@@ -191,5 +195,5 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 }
 
 func main() {
-	window.Run(gfxLoop)
+	window.Run(gfxLoop, nil)
 }

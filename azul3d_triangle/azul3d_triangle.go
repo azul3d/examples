@@ -12,9 +12,8 @@ import (
 	"log"
 	"os"
 
-	"azul3d.org/chippy.v1"
 	"azul3d.org/gfx.v1"
-	"azul3d.org/gfx/window.v1"
+	"azul3d.org/gfx/window.v2"
 	"azul3d.org/keyboard.v1"
 	math "azul3d.org/lmath.v1"
 )
@@ -56,9 +55,8 @@ var (
 	printInView bool
 )
 
-// gfxLoop is responsible for drawing things to the window. This loop must be
-// independent of the Chippy main loop.
-func gfxLoop(w *chippy.Window, r gfx.Renderer) {
+// gfxLoop is responsible for drawing things to the window.
+func gfxLoop(w window.Window, r gfx.Renderer) {
 	// Setup a camera to use a perspective projection.
 	camera := gfx.NewCamera()
 	camFOV := 75.0
@@ -129,11 +127,21 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 
 	triangle.Transform.SetParent(left)
 
+	// Spawn a goroutine to handle events.
 	go func() {
-		event := w.Events()
-		for e := range event {
+		// Create an event mask for the events we are interested in.
+		evMask := window.FramebufferResizedEvents
+		evMask |= window.KeyboardTypedEvents
+
+		// Create a channel of events.
+		events := make(chan window.Event, 256)
+
+		// Have the window notify our channel whenever events occur.
+		w.Notify(events, evMask)
+
+		for e := range events {
 			switch ev := e.(type) {
-			case chippy.ResizedEvent:
+			case window.FramebufferResized:
 				// Update the camera's projection matrix for the new width and
 				// height.
 				camera.Lock()
@@ -141,19 +149,19 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 				camera.Unlock()
 
 			case keyboard.TypedEvent:
-				if ev.Rune == 's' {
+				switch ev.Rune {
+				case 's':
 					printSamples = !printSamples
-
-				} else if ev.Rune == 'v' {
+				case 'v':
 					printInView = !printInView
 
-				} else if ev.Rune == 'm' {
+				case 'm':
 					// Toggle MSAA now.
 					msaa := !r.MSAA()
 					r.SetMSAA(msaa)
 					fmt.Println("MSAA Enabled?", msaa)
 
-				} else if ev.Rune == '1' {
+				case '1':
 					// Take a screenshot.
 					fmt.Println("Writing screenshot to file...")
 					// Download the image from the graphics hardware and save
@@ -180,7 +188,7 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 	for {
 		var v math.Vec2
 		// Depending on keyboard state, transform the triangle.
-		kb := w.Keyboard
+		kb := w.Keyboard()
 		if kb.Down(keyboard.ArrowLeft) {
 			v.X -= 1
 		}
@@ -296,5 +304,5 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 }
 
 func main() {
-	window.Run(gfxLoop)
+	window.Run(gfxLoop, nil)
 }

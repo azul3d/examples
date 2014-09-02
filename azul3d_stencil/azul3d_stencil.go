@@ -9,6 +9,7 @@ import (
 	"go/build"
 	"image"
 	_ "image/jpeg"
+	_ "image/png"
 	"log"
 	"math/rand"
 	"os"
@@ -16,10 +17,8 @@ import (
 	"sync"
 	"time"
 
-	"azul3d.org/chippy.v1"
 	"azul3d.org/gfx.v1"
-	"azul3d.org/gfx/gl2.v2"
-	"azul3d.org/gfx/window.v1"
+	"azul3d.org/gfx/window.v2"
 	math "azul3d.org/lmath.v1"
 )
 
@@ -158,35 +157,67 @@ func shapeTexCoords(index int) []gfx.TexCoord {
 	panic("never here")
 }
 
-func createShape(r gfx.Renderer, path string, which int) *gfx.Object {
-	// Load the picture.
+var (
+	texCache       = make(map[string]*gfx.Texture)
+	shapeMeshCache = make(map[int]*gfx.Mesh)
+)
+
+func loadTex(path string) *gfx.Texture {
+	// Check if that texture is already loaded.
+	tex, ok := texCache[path]
+	if ok {
+		return tex
+	}
+
+	// Load the image.
 	f, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// Decode the image.
 	img, _, err := image.Decode(f)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Create new texture and ask the renderer to load it.
-	tex := gfx.NewTexture()
+	// Create new texture.
+	tex = gfx.NewTexture()
 	tex.Source = img
 	tex.MinFilter = gfx.LinearMipmapLinear
 	tex.MagFilter = gfx.Linear
 	tex.Format = gfx.DXT1RGBA
 
+	// Cache for later and return.
+	texCache[path] = tex
+	return tex
+}
+
+func loadShapeMesh(which int) *gfx.Mesh {
+	// Check if that texture is already loaded.
+	m, ok := shapeMeshCache[which]
+	if ok {
+		return m
+	}
+
 	// Create a card object.
-	cardMesh := cardMesh(1.0, 1.0)
-	cardMesh.TexCoords = []gfx.TexCoordSet{
+	m = cardMesh(1.0, 1.0)
+	m.TexCoords = []gfx.TexCoordSet{
 		{
 			Slice: shapeTexCoords(which),
 		},
 	}
+
+	// Cache for later and return.
+	shapeMeshCache[which] = m
+	return m
+}
+
+func createShape(r gfx.Renderer, path string, which int) *gfx.Object {
+	// Create the object.
 	card := gfx.NewObject()
-	card.Textures = []*gfx.Texture{tex}
-	card.Meshes = []*gfx.Mesh{cardMesh}
+	card.Textures = []*gfx.Texture{loadTex(path)}
+	card.Meshes = []*gfx.Mesh{loadShapeMesh(which)}
 
 	// Set the card's state.
 	card.State = gfx.State{
@@ -281,6 +312,9 @@ func shapeSpawner(r gfx.Renderer, shader *gfx.Shader, camera *gfx.Camera) {
 	l:
 		for i < n {
 			if isDead(camera, shapes.slice[i]) {
+				// Release object for re-use.
+				shapes.slice[i].Destroy()
+
 				// Remove from slice.
 				shapes.slice[i] = shapes.slice[n-1]
 				n--
@@ -295,13 +329,11 @@ func shapeSpawner(r gfx.Renderer, shader *gfx.Shader, camera *gfx.Camera) {
 	}
 }
 
-// gfxLoop is responsible for drawing things to the window. This loop must be
-// independent of the Chippy main loop.
-func gfxLoop(w *chippy.Window, r gfx.Renderer) {
-	w.SetSize(720, 480)
-	w.SetPositionCenter(chippy.DefaultScreen())
-	glr := r.(*gl2.Renderer)
-	glr.UpdateBounds(image.Rect(0, 0, 720, 480))
+// gfxLoop is responsible for drawing things to the window..
+func gfxLoop(w window.Window, r gfx.Renderer) {
+	if r.Precision().StencilBits == 0 {
+		log.Fatal("Could not aquire a stencil buffer.")
+	}
 
 	// Create a simple shader.
 	shader := gfx.NewShader("SimpleShader")
@@ -372,5 +404,12 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 }
 
 func main() {
-	window.Run(gfxLoop)
+	props := window.NewProps()
+	props.SetSize(720, 480)
+	props.SetPrecision(gfx.Precision{
+		RedBits: 8, GreenBits: 8, BlueBits: 8, AlphaBits: 0,
+		DepthBits:   24,
+		StencilBits: 8, // Need stencil buffer for this example!
+	})
+	window.Run(gfxLoop, props)
 }

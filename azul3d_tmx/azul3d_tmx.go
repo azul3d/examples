@@ -15,9 +15,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"azul3d.org/chippy.v1"
 	"azul3d.org/gfx.v1"
-	"azul3d.org/gfx/window.v1"
+	"azul3d.org/gfx/window.v2"
 	"azul3d.org/keyboard.v1"
 	"azul3d.org/lmath.v1"
 	"azul3d.org/mouse.v1"
@@ -35,7 +34,7 @@ func absPath(relPath string) string {
 	if len(examplesDir) == 0 {
 		// Find assets directory.
 		for _, path := range filepath.SplitList(build.Default.GOPATH) {
-			path = filepath.Join(path, "src/azul3d.org/examples.dev")
+			path = filepath.Join(path, "src/azul3d.org/examples.v1")
 			if _, err := os.Stat(path); err == nil {
 				examplesDir = path
 				break
@@ -61,9 +60,8 @@ func setOrthoScale(c *gfx.Camera, view image.Rectangle, scale, near, far float64
 	c.Projection = gfx.ConvertMat4(m)
 }
 
-// gfxLoop is responsible for drawing things to the window. This loop must be
-// independent of the Chippy main loop.
-func gfxLoop(w *chippy.Window, r gfx.Renderer) {
+// gfxLoop is responsible for drawing things to the window.
+func gfxLoop(w window.Window, r gfx.Renderer) {
 	// Setup a camera to use a perspective projection.
 	camera := gfx.NewCamera()
 	camNear := 0.01
@@ -95,19 +93,33 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 		log.Fatal(err)
 	}
 
-	events := w.Events()
+	// Create an event mask for the events we are interested in.
+	evMask := window.FramebufferResizedEvents
+	evMask |= window.CursorMovedEvents
+	evMask |= window.MouseEvents
+	evMask |= window.KeyboardTypedEvents
+
+	// Create a channel of events.
+	events := make(chan window.Event, 256)
+
+	// Have the window notify our channel whenever events occur.
+	w.Notify(events, evMask)
+
 	handleEvents := func() {
 		limit := len(events)
 		for i := 0; i < limit; i++ {
 			e := <-events
 			switch ev := e.(type) {
-			case chippy.ResizedEvent:
+			case window.FramebufferResized:
 				// Update the camera's to account for the new width and height.
 				updateCamera()
 
 			case mouse.Event:
 				if ev.Button == mouse.Left && ev.State == mouse.Up {
-					w.SetCursorGrabbed(!w.CursorGrabbed())
+					// Toggle mouse grab.
+					props := w.Props()
+					props.SetCursorGrabbed(!props.CursorGrabbed())
+					w.Request(props)
 				}
 				if ev.Button == mouse.Wheel && ev.State == mouse.ScrollForward {
 					// Zoom in, and update the camera.
@@ -120,8 +132,8 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 					updateCamera()
 				}
 
-			case chippy.CursorPositionEvent:
-				if w.CursorGrabbed() {
+			case window.CursorMoved:
+				if ev.Delta {
 					p := lmath.Vec3{ev.X, 0, -ev.Y}
 					camera.Lock()
 					camera.SetPos(camera.Pos().Add(p))
@@ -136,17 +148,16 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 					r.SetMSAA(msaa)
 					fmt.Println("MSAA Enabled?", msaa)
 				case 'r':
-					if w.Keyboard.Down(keyboard.R) {
-						camera.Lock()
-						camera.SetPos(lmath.Vec3{0, -2, 0})
-						camera.Unlock()
-					}
+					camera.Lock()
+					camera.SetPos(lmath.Vec3{0, -2, 0})
+					camera.Unlock()
 				}
 			}
 		}
 	}
 
 	for {
+		// Handle events.
 		handleEvents()
 
 		// Clear the entire area (empty rectangle means "the whole area").
@@ -178,5 +189,5 @@ func init() {
 }
 
 func main() {
-	window.Run(gfxLoop)
+	window.Run(gfxLoop, nil)
 }

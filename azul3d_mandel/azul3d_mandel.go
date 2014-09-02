@@ -14,9 +14,8 @@ import (
 	gmath "math"
 	"os"
 
-	"azul3d.org/chippy.v1"
 	"azul3d.org/gfx.v1"
-	"azul3d.org/gfx/window.v1"
+	"azul3d.org/gfx/window.v2"
 	"azul3d.org/keyboard.v1"
 	"azul3d.org/mouse.v1"
 )
@@ -49,9 +48,8 @@ void main()
 }
 `)
 
-// gfxLoop is responsible for drawing things to the window. This loop must be
-// independent of the Chippy main loop.
-func gfxLoop(w *chippy.Window, r gfx.Renderer) {
+// gfxLoop is responsible for drawing things to the window.
+func gfxLoop(w window.Window, r gfx.Renderer) {
 	// Create a simple shader.
 	shader := gfx.NewShader("SimpleShader")
 	shader.GLSLVert = glslVert
@@ -99,7 +97,7 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 	res := 1
 	maxIter := 1000
 	updateTex := func() {
-		width, height := w.Size()
+		width, height := r.Bounds().Dx(), r.Bounds().Dy()
 		mbrot := Mandelbrot(width/res, height/res, maxIter, zoom, x, y)
 
 		// Insert a small red square in the top-left of the image for ensuring
@@ -129,11 +127,13 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 	updateTex()
 
 	go func() {
-		handle := func(e chippy.Event) (needUpdate bool) {
-			ev, ok := e.(mouse.Event)
-			if ok {
+		handle := func(e window.Event) (needUpdate bool) {
+			switch ev := e.(type) {
+			case mouse.Event:
 				if ev.Button == mouse.Left && ev.State == mouse.Down {
-					w.SetCursorGrabbed(!w.CursorGrabbed())
+					props := w.Props()
+					props.SetCursorGrabbed(!props.CursorGrabbed())
+					w.Request(props)
 				}
 
 				if ev.Button == mouse.Right && ev.State == mouse.Down {
@@ -144,19 +144,11 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 					return true
 				}
 
-				if ev.Button == mouse.Wheel {
-					if ev.State == mouse.ScrollForward {
-						zoom += 0.06 * gmath.Abs(zoom)
-					} else {
-						zoom -= 0.06 * gmath.Abs(1.0-zoom)
-					}
-					return true
-				}
-			}
+			case mouse.Scrolled:
+				zoom += ev.Y * 0.06 * gmath.Abs(zoom)
 
-			kev, ok := e.(keyboard.TypedEvent)
-			if ok {
-				if kev.Rune == 's' || kev.Rune == 'S' {
+			case keyboard.TypedEvent:
+				if ev.Rune == 's' || ev.Rune == 'S' {
 					fmt.Println("Writing texture to file...")
 					// Download the image from the graphics hardware and save
 					// it to disk.
@@ -189,18 +181,30 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 						fmt.Println("Wrote texture to mandel.png")
 					}
 				}
-			}
 
-			cev, ok := e.(chippy.CursorPositionEvent)
-			if ok && w.CursorGrabbed() {
-				x += (cev.X / 900.0) / gmath.Abs(zoom)
-				y += (cev.Y / 900.0) / gmath.Abs(zoom)
-				return true
+			case window.CursorMoved:
+				if ev.Delta {
+					x += (ev.X / 900.0) / gmath.Abs(zoom)
+					y += (ev.Y / 900.0) / gmath.Abs(zoom)
+					return true
+				}
 			}
 			return false
 		}
 
-		events := w.Events()
+		// Create an event mask for the events we are interested in.
+		evMask := window.MouseEvents
+		evMask |= window.KeyboardTypedEvents
+		evMask |= window.CursorMovedEvents
+
+		// Create a channel of events.
+		events := make(chan window.Event, 256)
+
+		// Have the window notify our channel whenever events occur.
+		w.Notify(events, evMask)
+
+		// Wait for events, we process them in large batches because updateTex
+		// calculate a mandelbrot on the CPU and it's very slow.
 		for {
 			e := <-events
 			needUpdate := handle(e)
@@ -231,5 +235,5 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 }
 
 func main() {
-	window.Run(gfxLoop)
+	window.Run(gfxLoop, nil)
 }

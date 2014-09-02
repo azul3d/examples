@@ -9,9 +9,8 @@ import (
 	"image"
 	"log"
 
-	"azul3d.org/chippy.v1"
 	"azul3d.org/gfx.v1"
-	"azul3d.org/gfx/window.v1"
+	"azul3d.org/gfx/window.v2"
 	"azul3d.org/keyboard.v1"
 	"azul3d.org/lmath.v1"
 )
@@ -50,9 +49,8 @@ void main()
 }
 `)
 
-// gfxLoop is responsible for drawing things to the window. This loop must be
-// independent of the Chippy main loop.
-func gfxLoop(w *chippy.Window, r gfx.Renderer) {
+// gfxLoop is responsible for drawing things to the window.
+func gfxLoop(w window.Window, r gfx.Renderer) {
 	// Setup a camera to use a perspective projection.
 	camera := gfx.NewCamera()
 	camFOV := 75.0
@@ -136,15 +134,27 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 	card.Textures = []*gfx.Texture{rtColor}
 	card.Meshes = []*gfx.Mesh{cardMesh}
 
+	// Spawn a goroutine to handle events.
 	go func() {
-		for e := range w.Events() {
+		// Create an event mask for the events we are interested in.
+		evMask := window.FramebufferResizedEvents
+		evMask |= window.KeyboardTypedEvents
+
+		// Create a channel of events.
+		events := make(chan window.Event, 256)
+
+		// Have the window notify our channel whenever events occur.
+		w.Notify(events, evMask)
+
+		for e := range events {
 			switch ev := e.(type) {
-			case chippy.ResizedEvent:
+			case window.FramebufferResized:
 				// Update the camera's projection matrix for the new width and
 				// height.
 				camera.Lock()
 				camera.SetPersp(r.Bounds(), camFOV, camNear, camFar)
 				camera.Unlock()
+
 			case keyboard.TypedEvent:
 				if ev.Rune == 'm' || ev.Rune == 'M' {
 					// Toggle mipmapping.
@@ -204,5 +214,5 @@ func gfxLoop(w *chippy.Window, r gfx.Renderer) {
 }
 
 func main() {
-	window.Run(gfxLoop)
+	window.Run(gfxLoop, nil)
 }
