@@ -343,6 +343,15 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 	// Create the background.
 	bgPicture := createPicture(r, absPath("assets/textures/yi_han_cheol.jpg"))
 	bgPicture.Shader = shader
+	bgPicture.State.StencilTest = true
+	bgPicture.State.StencilFront = gfx.StencilState{
+		ReadMask:  0xFF,
+		Reference: 1,
+		Fail:      gfx.SZero,
+		DepthFail: gfx.SZero,
+		DepthPass: gfx.SKeep,
+		Cmp:       gfx.Equal,
+	}
 
 	// Create a camera.
 	c := gfx.NewCamera()
@@ -387,15 +396,6 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 		shapes.Unlock()
 
 		// Draw the background picture.
-		bgPicture.State.StencilTest = true
-		bgPicture.State.StencilFront = gfx.StencilState{
-			ReadMask:  0xFF,
-			Reference: 1,
-			Fail:      gfx.SZero,
-			DepthFail: gfx.SZero,
-			DepthPass: gfx.SKeep,
-			Cmp:       gfx.Equal,
-		}
 		r.Draw(image.Rect(0, 0, 0, 0), bgPicture, c)
 
 		// Render the whole frame.
