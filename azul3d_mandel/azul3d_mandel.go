@@ -94,7 +94,7 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 	zoom := 1.0
 	x := -0.5
 	y := 0.0
-	res := 1
+	res := 8
 	maxIter := 1000
 	updateTex := func() {
 		width, height := r.Bounds().Dx(), r.Bounds().Dy()
@@ -139,7 +139,7 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 				if ev.Button == mouse.Right && ev.State == mouse.Down {
 					res += 2
 					if res > 8 {
-						res = 1
+						res = 4
 					}
 					return true
 				}
