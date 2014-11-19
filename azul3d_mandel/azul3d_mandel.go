@@ -194,6 +194,7 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 
 		// Create an event mask for the events we are interested in.
 		evMask := window.MouseEvents
+		evMask |= window.MouseScrolledEvents
 		evMask |= window.KeyboardTypedEvents
 		evMask |= window.CursorMovedEvents
 
