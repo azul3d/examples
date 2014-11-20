@@ -14,7 +14,7 @@ import (
 	gmath "math"
 	"os"
 
-	"azul3d.org/gfx.v1"
+	"azul3d.org/gfx.v2-dev"
 	"azul3d.org/gfx/window.v2"
 	"azul3d.org/keyboard.v1"
 	"azul3d.org/mouse.v1"

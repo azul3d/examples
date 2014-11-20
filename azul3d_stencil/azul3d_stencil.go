@@ -17,7 +17,7 @@ import (
 	"sync"
 	"time"
 
-	"azul3d.org/gfx.v1"
+	"azul3d.org/gfx.v2-dev"
 	"azul3d.org/gfx/window.v2"
 	math "azul3d.org/lmath.v1"
 )
