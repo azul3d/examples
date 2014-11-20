@@ -180,7 +180,7 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 }
 
 var (
-	defaultMapFile = absPath("assets/tmx/test_base64.tmx")
+	defaultMapFile = absPath("azul3d_tmx/data/test_base64.tmx")
 	mapFile        = flag.String("file", defaultMapFile, "tmx map file to load")
 )
 
