@@ -9,7 +9,7 @@ import (
 	"image"
 
 	"azul3d.org/gfx.v2-dev"
-	"azul3d.org/gfx/window.v2"
+	"azul3d.org/gfx.v2-dev/window"
 )
 
 // gfxLoop is responsible for drawing things to the window.
