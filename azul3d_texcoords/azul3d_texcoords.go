@@ -91,7 +91,7 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 	shader.GLSLFrag = glslFrag
 
 	// Load the picture.
-	f, err := os.Open(absPath("assets/textures/texture_coords_1024x1024.png"))
+	f, err := os.Open(absPath("azul3d_texcoords/texture_coords_1024x1024.png"))
 	if err != nil {
 		log.Fatal(err)
 	}
