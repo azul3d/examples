@@ -251,9 +251,9 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 		}
 		triangle.RUnlock()
 
-		// Clear the entire area (empty rectangle means "the whole area").
-		r.Clear(image.Rect(0, 0, 0, 0), gfx.Color{1, 1, 1, 1})
-		r.ClearDepth(image.Rect(0, 0, 0, 0), 1.0)
+		// Clear color and depth buffers.
+		r.Clear(r.Bounds(), gfx.Color{1, 1, 1, 1})
+		r.ClearDepth(r.Bounds(), 1.0)
 
 		// Clear a few rectangles on the window using different background
 		// colors.

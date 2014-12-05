@@ -160,16 +160,16 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 		// Handle events.
 		handleEvents()
 
-		// Clear the entire area (empty rectangle means "the whole area").
-		r.Clear(image.Rect(0, 0, 0, 0), gfx.Color{1, 1, 1, 1})
-		r.ClearDepth(image.Rect(0, 0, 0, 0), 1.0)
+		// Clear color and depth buffers.
+		r.Clear(r.Bounds(), gfx.Color{1, 1, 1, 1})
+		r.ClearDepth(r.Bounds(), 1.0)
 
 		// Draw the TMX map to the screen.
 		for _, layer := range tmxMap.Layers {
 			objects, ok := layers[layer.Name]
 			if ok {
 				for _, obj := range objects {
-					r.Draw(image.Rect(0, 0, 0, 0), obj, camera)
+					r.Draw(r.Bounds(), obj, camera)
 				}
 			}
 		}

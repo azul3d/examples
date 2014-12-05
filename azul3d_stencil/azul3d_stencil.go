@@ -367,10 +367,10 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 		c.Projection = gfx.ConvertMat4(m)
 		c.Unlock()
 
-		// Clear the entire area (empty rectangle means "the whole area").
-		r.Clear(image.Rect(0, 0, 0, 0), gfx.Color{0, 0, 0, 1})
-		r.ClearDepth(image.Rect(0, 0, 0, 0), 1.0)
-		r.ClearStencil(image.Rect(0, 0, 0, 0), 0)
+		// Clear the color, depth, and stencil buffers.
+		r.Clear(r.Bounds(), gfx.Color{0, 0, 0, 1})
+		r.ClearDepth(r.Bounds(), 1.0)
+		r.ClearStencil(r.Bounds(), 0)
 
 		shapes.Lock()
 		for _, shape := range shapes.slice {
@@ -390,12 +390,12 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 			shape.SetPos(shape.ConvertPos(v, gfx.LocalToWorld))
 
 			// Draw the shape.
-			r.Draw(image.Rect(0, 0, 0, 0), shape, c)
+			r.Draw(r.Bounds(), shape, c)
 		}
 		shapes.Unlock()
 
 		// Draw the background picture.
-		r.Draw(image.Rect(0, 0, 0, 0), bgPicture, c)
+		r.Draw(r.Bounds(), bgPicture, c)
 
 		// Render the whole frame.
 		r.Render()

@@ -37,8 +37,8 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 	}()
 
 	for {
-		// Clear the entire area (empty rectangle means "the whole area").
-		r.Clear(image.Rect(0, 0, 0, 0), gfx.Color{1, 1, 1, 1})
+		// Clear the entire area.
+		r.Clear(r.Bounds(), gfx.Color{1, 1, 1, 1})
 
 		// The keyboard is monitored for you, simply check if a key is down:
 		if w.Keyboard().Down(keyboard.Space) {

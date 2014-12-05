@@ -223,12 +223,12 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 	}()
 
 	for {
-		// Clear the entire area (empty rectangle means "the whole area").
-		r.Clear(image.Rect(0, 0, 0, 0), gfx.Color{1, 1, 1, 1})
-		r.ClearDepth(image.Rect(0, 0, 0, 0), 1.0)
+		// Clear color and depth buffers.
+		r.Clear(r.Bounds(), gfx.Color{1, 1, 1, 1})
+		r.ClearDepth(r.Bounds(), 1.0)
 
 		// Draw the card to the screen.
-		r.Draw(image.Rect(0, 0, 0, 0), card, nil)
+		r.Draw(r.Bounds(), card, nil)
 
 		// Render the whole frame.
 		r.Render()

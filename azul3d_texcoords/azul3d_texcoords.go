@@ -182,12 +182,12 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 		s := float64(b.Dy()) / 2.0 // Card is two units wide, so divide by two.
 		card.SetScale(lmath.Vec3{s, s, s})
 
-		// Clear the entire area (empty rectangle means "the whole area").
-		r.Clear(image.Rect(0, 0, 0, 0), gfx.Color{1, 1, 1, 1})
-		r.ClearDepth(image.Rect(0, 0, 0, 0), 1.0)
+		// Clear color and depth buffers.
+		r.Clear(r.Bounds(), gfx.Color{1, 1, 1, 1})
+		r.ClearDepth(r.Bounds(), 1.0)
 
 		// Draw the textured card.
-		r.Draw(image.Rect(0, 0, 0, 0), card, camera)
+		r.Draw(r.Bounds(), card, camera)
 
 		// Render the whole frame.
 		r.Render()
