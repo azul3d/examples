@@ -61,7 +61,7 @@ func setOrthoScale(c *gfx.Camera, view image.Rectangle, scale, near, far float64
 }
 
 // gfxLoop is responsible for drawing things to the window.
-func gfxLoop(w window.Window, r gfx.Renderer) {
+func gfxLoop(w window.Window, d gfx.Device) {
 	// Setup a camera to use a perspective projection.
 	camera := gfx.NewCamera()
 	camNear := 0.01
@@ -77,7 +77,7 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 			camZoom = camMinZoom
 		}
 		camera.Lock()
-		setOrthoScale(camera, r.Bounds(), camZoom, camNear, camFar)
+		setOrthoScale(camera, d.Bounds(), camZoom, camNear, camFar)
 		camera.Unlock()
 	}
 
@@ -144,8 +144,8 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 				switch ev.Rune {
 				case 'm':
 					// Toggle MSAA now.
-					msaa := !r.MSAA()
-					r.SetMSAA(msaa)
+					msaa := !d.MSAA()
+					d.SetMSAA(msaa)
 					fmt.Println("MSAA Enabled?", msaa)
 				case 'r':
 					camera.Lock()
@@ -161,21 +161,21 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 		handleEvents()
 
 		// Clear color and depth buffers.
-		r.Clear(r.Bounds(), gfx.Color{1, 1, 1, 1})
-		r.ClearDepth(r.Bounds(), 1.0)
+		d.Clear(d.Bounds(), gfx.Color{1, 1, 1, 1})
+		d.ClearDepth(d.Bounds(), 1.0)
 
 		// Draw the TMX map to the screen.
 		for _, layer := range tmxMap.Layers {
 			objects, ok := layers[layer.Name]
 			if ok {
 				for _, obj := range objects {
-					r.Draw(r.Bounds(), obj, camera)
+					d.Draw(d.Bounds(), obj, camera)
 				}
 			}
 		}
 
 		// Render the whole frame.
-		r.Render()
+		d.Render()
 	}
 }
 
