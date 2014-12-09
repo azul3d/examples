@@ -50,13 +50,13 @@ void main()
 `)
 
 // gfxLoop is responsible for drawing things to the window.
-func gfxLoop(w window.Window, r gfx.Renderer) {
+func gfxLoop(w window.Window, d gfx.Device) {
 	// Setup a camera to use a perspective projection.
 	camera := gfx.NewCamera()
 	camFOV := 75.0
 	camNear := 0.0001
 	camFar := 1000.0
-	camera.SetPersp(r.Bounds(), camFOV, camNear, camFar)
+	camera.SetPersp(d.Bounds(), camFOV, camNear, camFar)
 
 	// Move the camera back two units away from the card.
 	camera.SetPos(lmath.Vec3{0, -2, 0})
@@ -67,7 +67,7 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 	rtColor.MagFilter = gfx.Linear
 
 	// Choose a render to texture format.
-	cfg := r.GPUInfo().RTTFormats.ChooseConfig(gfx.Precision{
+	cfg := d.Info().RTTFormats.ChooseConfig(gfx.Precision{
 		// We want 24/bpp RGB color buffer.
 		RedBits: 8, GreenBits: 8, BlueBits: 8,
 
@@ -87,7 +87,7 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 	cfg.Bounds = image.Rect(0, 0, 512, 512)
 
 	// Create our render-to-texture canvas.
-	rtCanvas := r.RenderToTexture(cfg)
+	rtCanvas := d.RenderToTexture(cfg)
 	if rtCanvas == nil {
 		// Important! Check if the canvas is nil. If it is their graphics
 		// hardware doesn't support render to texture. Sorry!
@@ -152,7 +152,7 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 				// Update the camera's projection matrix for the new width and
 				// height.
 				camera.Lock()
-				camera.SetPersp(r.Bounds(), camFOV, camNear, camFar)
+				camera.SetPersp(d.Bounds(), camFOV, camNear, camFar)
 				camera.Unlock()
 
 			case keyboard.TypedEvent:
@@ -198,18 +198,18 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 		card.SetRot(lmath.Vec3{
 			X: rot.X,
 			Y: rot.Y,
-			Z: rot.Z + (15 * r.Clock().Dt()),
+			Z: rot.Z + (15 * d.Clock().Dt()),
 		})
 
 		// Clear color and depth buffers.
-		r.Clear(r.Bounds(), gfx.Color{1, 1, 1, 1})
-		r.ClearDepth(r.Bounds(), 1.0)
+		d.Clear(d.Bounds(), gfx.Color{1, 1, 1, 1})
+		d.ClearDepth(d.Bounds(), 1.0)
 
 		// Draw the card.
-		r.Draw(r.Bounds(), card, camera)
+		d.Draw(d.Bounds(), card, camera)
 
 		// Render the frame.
-		r.Render()
+		d.Render()
 	}
 }
 
