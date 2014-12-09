@@ -49,7 +49,7 @@ void main()
 `)
 
 // gfxLoop is responsible for drawing things to the window.
-func gfxLoop(w window.Window, r gfx.Renderer) {
+func gfxLoop(w window.Window, d gfx.Device) {
 	// Create a simple shader.
 	shader := gfx.NewShader("SimpleShader")
 	shader.GLSLVert = glslVert
@@ -97,7 +97,7 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 	res := 8
 	maxIter := 1000
 	updateTex := func() {
-		width, height := r.Bounds().Dx(), r.Bounds().Dy()
+		width, height := d.Bounds().Dx(), d.Bounds().Dy()
 		mbrot := Mandelbrot(width/res, height/res, maxIter, zoom, x, y)
 
 		// Insert a small red square in the top-left of the image for ensuring
@@ -116,7 +116,7 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 		tex.MagFilter = gfx.Nearest
 
 		onLoad := make(chan *gfx.Texture, 1)
-		r.LoadTexture(tex, onLoad)
+		d.LoadTexture(tex, onLoad)
 		<-onLoad
 
 		// Swap the texture with the old one on the card.
@@ -224,14 +224,14 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 
 	for {
 		// Clear color and depth buffers.
-		r.Clear(r.Bounds(), gfx.Color{1, 1, 1, 1})
-		r.ClearDepth(r.Bounds(), 1.0)
+		d.Clear(d.Bounds(), gfx.Color{1, 1, 1, 1})
+		d.ClearDepth(d.Bounds(), 1.0)
 
 		// Draw the card to the screen.
-		r.Draw(r.Bounds(), card, nil)
+		d.Draw(d.Bounds(), card, nil)
 
 		// Render the whole frame.
-		r.Render()
+		d.Render()
 	}
 }
 
