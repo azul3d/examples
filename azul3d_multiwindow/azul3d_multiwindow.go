@@ -14,20 +14,20 @@ import (
 )
 
 // gfxLoop is responsible for drawing things to the window.
-func gfxLoop(w window.Window, r gfx.Renderer) {
+func gfxLoop(w window.Window, d gfx.Device) {
 	for {
 		// Clear the entire area.
-		r.Clear(r.Bounds(), gfx.Color{1, 1, 1, 1})
+		d.Clear(d.Bounds(), gfx.Color{1, 1, 1, 1})
 
 		// Clear a few rectangles on the window using different background
 		// colors.
-		r.Clear(image.Rect(0, 50, 800, 400), gfx.Color{0, 1, 0, 1})
-		r.Clear(image.Rect(50, 50, 750, 400), gfx.Color{1, 0, 0, 1})
-		r.Clear(image.Rect(50, 100, 750, 350), gfx.Color{0, 0.5, 0.5, 1})
-		r.Clear(image.Rect(100, 150, 700, 300), gfx.Color{1, 1, 0, 1})
+		d.Clear(image.Rect(0, 50, 800, 400), gfx.Color{0, 1, 0, 1})
+		d.Clear(image.Rect(50, 50, 750, 400), gfx.Color{1, 0, 0, 1})
+		d.Clear(image.Rect(50, 100, 750, 350), gfx.Color{0, 0.5, 0.5, 1})
+		d.Clear(image.Rect(100, 150, 700, 300), gfx.Color{1, 1, 0, 1})
 
 		// Render the whole frame.
-		r.Render()
+		d.Render()
 	}
 }
 
