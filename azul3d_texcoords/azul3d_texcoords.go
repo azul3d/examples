@@ -75,12 +75,12 @@ void main()
 `)
 
 // gfxLoop is responsible for drawing things to the window.
-func gfxLoop(w window.Window, r gfx.Renderer) {
+func gfxLoop(w window.Window, d gfx.Device) {
 	// Setup a camera to use a perspective projection.
 	camera := gfx.NewCamera()
 	camNear := 0.01
 	camFar := 1000.0
-	camera.SetOrtho(r.Bounds(), camNear, camFar)
+	camera.SetOrtho(d.Bounds(), camNear, camFar)
 
 	// Move the camera back two units away from the card.
 	camera.SetPos(lmath.Vec3{0, -2, 0})
@@ -155,7 +155,7 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 				// Update the camera's projection matrix for the new width and
 				// height.
 				camera.Lock()
-				camera.SetOrtho(r.Bounds(), camNear, camFar)
+				camera.SetOrtho(d.Bounds(), camNear, camFar)
 				camera.Unlock()
 
 			case keyboard.TypedEvent:
@@ -175,7 +175,7 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 
 	for {
 		// Center the card in the window.
-		b := r.Bounds()
+		b := d.Bounds()
 		card.SetPos(lmath.Vec3{float64(b.Dx()) / 2.0, 0, float64(b.Dy()) / 2.0})
 
 		// Scale the card to fit the window.
@@ -183,14 +183,14 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 		card.SetScale(lmath.Vec3{s, s, s})
 
 		// Clear color and depth buffers.
-		r.Clear(r.Bounds(), gfx.Color{1, 1, 1, 1})
-		r.ClearDepth(r.Bounds(), 1.0)
+		d.Clear(d.Bounds(), gfx.Color{1, 1, 1, 1})
+		d.ClearDepth(d.Bounds(), 1.0)
 
 		// Draw the textured card.
-		r.Draw(r.Bounds(), card, camera)
+		d.Draw(d.Bounds(), card, camera)
 
 		// Render the whole frame.
-		r.Render()
+		d.Render()
 	}
 }
 
