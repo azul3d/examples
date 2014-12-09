@@ -108,7 +108,7 @@ func cardTexCoords(u, v, s, t float32) []gfx.TexCoord {
 	}
 }
 
-func createPicture(r gfx.Renderer, path string) *gfx.Object {
+func createPicture(d gfx.Device, path string) *gfx.Object {
 	// Load the picture.
 	f, err := os.Open(path)
 	if err != nil {
@@ -120,7 +120,7 @@ func createPicture(r gfx.Renderer, path string) *gfx.Object {
 		log.Fatal(err)
 	}
 
-	// Create new texture and ask the renderer to load it.
+	// Create new texture and ask the device to load it.
 	tex := gfx.NewTexture()
 	tex.Source = img
 	tex.MinFilter = gfx.LinearMipmapLinear
@@ -212,7 +212,7 @@ func loadShapeMesh(which int) *gfx.Mesh {
 	return m
 }
 
-func createShape(r gfx.Renderer, path string, which int) *gfx.Object {
+func createShape(d gfx.Device, path string, which int) *gfx.Object {
 	// Create the object.
 	card := gfx.NewObject()
 	card.Textures = []*gfx.Texture{loadTex(path)}
@@ -259,7 +259,7 @@ func isDead(camera *gfx.Camera, shape *gfx.Object) bool {
 	return false
 }
 
-func shapeSpawner(r gfx.Renderer, shader *gfx.Shader, camera *gfx.Camera) {
+func shapeSpawner(d gfx.Device, shader *gfx.Shader, camera *gfx.Camera) {
 	butterfly := time.Tick(time.Second / 4)
 	other := time.Tick(time.Second / 2)
 
@@ -274,7 +274,7 @@ func shapeSpawner(r gfx.Renderer, shader *gfx.Shader, camera *gfx.Camera) {
 		}
 
 		// Create a shape.
-		shape := createShape(r, absPath("azul3d_stencil/shapes.png"), which)
+		shape := createShape(d, absPath("azul3d_stencil/shapes.png"), which)
 		shape.Shader = shader
 		shape.SetPos(math.Vec3{0, -1, 0})
 
@@ -328,9 +328,9 @@ func shapeSpawner(r gfx.Renderer, shader *gfx.Shader, camera *gfx.Camera) {
 	}
 }
 
-// gfxLoop is responsible for drawing things to the window..
-func gfxLoop(w window.Window, r gfx.Renderer) {
-	if r.Precision().StencilBits == 0 {
+// gfxLoop is responsible for drawing things to the window.
+func gfxLoop(w window.Window, d gfx.Device) {
+	if d.Precision().StencilBits == 0 {
 		log.Fatal("Could not aquire a stencil buffer.")
 	}
 
@@ -340,7 +340,7 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 	shader.GLSLFrag = glslFrag
 
 	// Create the background.
-	bgPicture := createPicture(r, absPath("azul3d_stencil/yi_han_cheol.png"))
+	bgPicture := createPicture(d, absPath("azul3d_stencil/yi_han_cheol.png"))
 	bgPicture.Shader = shader
 	bgPicture.State.StencilTest = true
 	bgPicture.State.StencilFront = gfx.StencilState{
@@ -357,10 +357,10 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 	c.SetPos(math.Vec3{0, -2, 0})
 
 	// Start the shape spawner.
-	go shapeSpawner(r, shader, c)
+	go shapeSpawner(d, shader, c)
 
 	for {
-		bounds := r.Bounds()
+		bounds := d.Bounds()
 		xRatio := float64(bounds.Dx()) / float64(bounds.Dy())
 		m := math.Mat4Ortho(-xRatio, xRatio, -1, 1, 0.001, 100.0)
 		c.Lock()
@@ -368,9 +368,9 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 		c.Unlock()
 
 		// Clear the color, depth, and stencil buffers.
-		r.Clear(r.Bounds(), gfx.Color{0, 0, 0, 1})
-		r.ClearDepth(r.Bounds(), 1.0)
-		r.ClearStencil(r.Bounds(), 0)
+		d.Clear(d.Bounds(), gfx.Color{0, 0, 0, 1})
+		d.ClearDepth(d.Bounds(), 1.0)
+		d.ClearStencil(d.Bounds(), 0)
 
 		shapes.Lock()
 		for _, shape := range shapes.slice {
@@ -380,7 +380,7 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 			}
 
 			// We will move the shape forward a small amount.
-			v := math.Vec3{0, 0, 0.7 * r.Clock().Dt()}
+			v := math.Vec3{0, 0, 0.7 * d.Clock().Dt()}
 
 			// We don't want movement to take scale into account, all shapes
 			// move the same speed no matter how large or small.
@@ -390,15 +390,15 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 			shape.SetPos(shape.ConvertPos(v, gfx.LocalToWorld))
 
 			// Draw the shape.
-			r.Draw(r.Bounds(), shape, c)
+			d.Draw(d.Bounds(), shape, c)
 		}
 		shapes.Unlock()
 
 		// Draw the background picture.
-		r.Draw(r.Bounds(), bgPicture, c)
+		d.Draw(d.Bounds(), bgPicture, c)
 
 		// Render the whole frame.
-		r.Render()
+		d.Render()
 	}
 }
 
