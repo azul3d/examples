@@ -17,7 +17,7 @@ import (
 )
 
 // gfxLoop is responsible for drawing things to the window.
-func gfxLoop(w window.Window, r gfx.Renderer) {
+func gfxLoop(w window.Window, d gfx.Device) {
 	// You can handle window events in a seperate goroutine!
 	go func() {
 		// Create our events channel with sufficient buffer size.
@@ -38,22 +38,22 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 
 	for {
 		// Clear the entire area.
-		r.Clear(r.Bounds(), gfx.Color{1, 1, 1, 1})
+		d.Clear(d.Bounds(), gfx.Color{1, 1, 1, 1})
 
 		// The keyboard is monitored for you, simply check if a key is down:
 		if w.Keyboard().Down(keyboard.Space) {
 			// Clear a red rectangle.
-			r.Clear(image.Rect(0, 0, 100, 100), gfx.Color{1, 0, 0, 1})
+			d.Clear(image.Rect(0, 0, 100, 100), gfx.Color{1, 0, 0, 1})
 		}
 
 		// And the same thing with the mouse, check if a mouse button is down:
 		if w.Mouse().Down(mouse.Left) {
 			// Clear a blue rectangle.
-			r.Clear(image.Rect(100, 100, 200, 200), gfx.Color{0, 0, 1, 1})
+			d.Clear(image.Rect(100, 100, 200, 200), gfx.Color{0, 0, 1, 1})
 		}
 
 		// Render the whole frame.
-		r.Render()
+		d.Render()
 	}
 }
 
