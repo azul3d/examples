@@ -56,13 +56,13 @@ var (
 )
 
 // gfxLoop is responsible for drawing things to the window.
-func gfxLoop(w window.Window, r gfx.Renderer) {
+func gfxLoop(w window.Window, d gfx.Device) {
 	// Setup a camera to use a perspective projection.
 	camera := gfx.NewCamera()
 	camFOV := 75.0
 	camNear := 0.0001
 	camFar := 1000.0
-	camera.SetPersp(r.Bounds(), camFOV, camNear, camFar)
+	camera.SetPersp(d.Bounds(), camFOV, camNear, camFar)
 
 	// Move the camera -2 on the Y axis (back two units away from the triangle
 	// object).
@@ -145,7 +145,7 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 				// Update the camera's projection matrix for the new width and
 				// height.
 				camera.Lock()
-				camera.SetPersp(r.Bounds(), camFOV, camNear, camFar)
+				camera.SetPersp(d.Bounds(), camFOV, camNear, camFar)
 				camera.Unlock()
 
 			case keyboard.TypedEvent:
@@ -157,8 +157,8 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 
 				case 'm':
 					// Toggle MSAA now.
-					msaa := !r.MSAA()
-					r.SetMSAA(msaa)
+					msaa := !d.MSAA()
+					d.SetMSAA(msaa)
 					fmt.Println("MSAA Enabled?", msaa)
 
 				case '1':
@@ -167,7 +167,7 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 					// Download the image from the graphics hardware and save
 					// it to disk.
 					complete := make(chan image.Image, 1)
-					r.Download(image.Rect(256, 256, 512, 512), complete)
+					d.Download(image.Rect(256, 256, 512, 512), complete)
 					img := <-complete // Wait for download to complete.
 
 					// Save to png.
@@ -209,7 +209,7 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 		}
 
 		// Apply movement relative to the frame rate.
-		v = v.MulScalar(r.Clock().Dt())
+		v = v.MulScalar(d.Clock().Dt())
 
 		// Update the triangle's transformation matrix.
 		triangle.RLock()
@@ -258,38 +258,38 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 		triangle.RUnlock()
 
 		// Clear color and depth buffers.
-		r.Clear(r.Bounds(), gfx.Color{1, 1, 1, 1})
-		r.ClearDepth(r.Bounds(), 1.0)
+		d.Clear(d.Bounds(), gfx.Color{1, 1, 1, 1})
+		d.ClearDepth(d.Bounds(), 1.0)
 
 		// Clear a few rectangles on the window using different background
 		// colors.
-		r.Clear(image.Rect(0, 100, 720, 380), gfx.Color{0, 1, 0, 1})
-		r.Clear(image.Rect(100, 100, 620, 380), gfx.Color{1, 0, 0, 1})
-		r.Clear(image.Rect(100, 200, 620, 280), gfx.Color{0, 0.5, 0.5, 1})
-		r.Clear(image.Rect(200, 200, 520, 280), gfx.Color{1, 1, 0, 1})
+		d.Clear(image.Rect(0, 100, 720, 380), gfx.Color{0, 1, 0, 1})
+		d.Clear(image.Rect(100, 100, 620, 380), gfx.Color{1, 0, 0, 1})
+		d.Clear(image.Rect(100, 200, 620, 280), gfx.Color{0, 0.5, 0.5, 1})
+		d.Clear(image.Rect(200, 200, 520, 280), gfx.Color{1, 1, 0, 1})
 
 		// Draw the triangle to the screen.
-		bounds := r.Bounds()
-		r.Draw(bounds.Inset(50), triangle, camera)
+		bounds := d.Bounds()
+		d.Draw(bounds.Inset(50), triangle, camera)
 
 		// Render the whole frame.
-		r.Render()
+		d.Render()
 
 		// Print the number of samples the triangle drew (only if the GPU
 		// supports occlusion queries).
-		if printSamples && r.GPUInfo().OcclusionQuery {
+		if printSamples && d.Info().OcclusionQuery {
 			// The number of samples the triangle drew:
 			samples := triangle.SampleCount()
 
 			// The number of pixels the triangle drew:
-			msaa := r.Precision().Samples
+			msaa := d.Precision().Samples
 			if msaa == 0 {
 				msaa = 1
 			}
 			pixels := samples / msaa
 
 			// The percent of the window that the triangle drew to:
-			bounds := r.Bounds()
+			bounds := d.Bounds()
 			percentage := float64(pixels) / float64(bounds.Dx()*bounds.Dy())
 
 			fmt.Printf("Drew %v samples (%vpx, %f%% of window)\n", samples, pixels, percentage)
