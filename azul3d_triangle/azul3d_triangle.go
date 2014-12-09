@@ -180,6 +180,12 @@ func gfxLoop(w window.Window, r gfx.Renderer) {
 						log.Fatal(err)
 					}
 					fmt.Println("Wrote texture to screenshot.png")
+
+				case '2':
+					fmt.Println("toggle fullscreen")
+					props := w.Props()
+					props.SetFullscreen(!props.Fullscreen())
+					w.Request(props)
 				}
 			}
 		}
