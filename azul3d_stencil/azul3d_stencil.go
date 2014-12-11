@@ -336,8 +336,10 @@ func gfxLoop(w window.Window, d gfx.Device) {
 
 	// Create a simple shader.
 	shader := gfx.NewShader("SimpleShader")
-	shader.GLSLVert = glslVert
-	shader.GLSLFrag = glslFrag
+	shader.GLSL = &gfx.GLSLShader{
+		Vertex: glslVert,
+		Fragment: glslFrag,
+	}
 
 	// Create the background.
 	bgPicture := createPicture(d, absPath("azul3d_stencil/yi_han_cheol.png"))
