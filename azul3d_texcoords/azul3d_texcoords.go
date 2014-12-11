@@ -87,8 +87,10 @@ func gfxLoop(w window.Window, d gfx.Device) {
 
 	// Create a simple shader.
 	shader := gfx.NewShader("SimpleShader")
-	shader.GLSLVert = glslVert
-	shader.GLSLFrag = glslFrag
+	shader.GLSL = &gfx.GLSLShader{
+		Vertex: glslVert,
+		Fragment: glslFrag,
+	}
 
 	// Load the picture.
 	f, err := os.Open(absPath("azul3d_texcoords/texture_coords_1024x1024.png"))
