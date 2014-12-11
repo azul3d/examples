@@ -19,12 +19,17 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	dev := d.Info()
 	fmt.Println("Device Name:", dev.Name)
 	fmt.Println("Device Vendor:", dev.Vendor)
-	fmt.Printf("OpenGL: v%d.%d\n", dev.GLMajor, dev.GLMinor)
-	fmt.Printf("GLSL: v%d.%d\n", dev.GLSLMajor, dev.GLSLMinor)
 	fmt.Println("OcclusionQuery =", dev.OcclusionQuery)
 	fmt.Println("OcclusionQueryBits =", dev.OcclusionQueryBits)
 	fmt.Println("MaxTextureSize =", dev.MaxTextureSize)
 	fmt.Println("NPOT Textures =", dev.NPOT)
+	fmt.Println("AlphaToCoverage =", dev.AlphaToCoverage)
+
+	fmt.Printf("OpenGL: v%d.%d\n", dev.GL.MajorVersion, dev.GL.MinorVersion)
+	fmt.Printf("GLSL: v%d.%d\n", dev.GLSL.MajorVersion, dev.GLSL.MinorVersion)
+	fmt.Println("GLSL MaxVaryingFloats =", dev.GLSL.MaxVaryingFloats)
+	fmt.Println("GLSL MaxVertexInputs =", dev.GLSL.MaxVertexInputs)
+	fmt.Println("GLSL MaxFragmentInputs =", dev.GLSL.MaxFragmentInputs)
 
 	fmt.Printf("%d Render-To-Texture MSAA Formats:\n", len(dev.RTTFormats.Samples))
 	for i, sampleCount := range dev.RTTFormats.Samples {
@@ -44,11 +49,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 		fmt.Printf("    %d. %+v\n", i+1, f)
 	}
 
-	fmt.Println("AlphaToCoverage =", dev.AlphaToCoverage)
-	fmt.Println("GLSLMaxVaryingFloats =", dev.GLSLMaxVaryingFloats)
-	fmt.Println("GLSLMaxVertexInputs =", dev.GLSLMaxVertexInputs)
-	fmt.Println("GLSLMaxFragmentInputs =", dev.GLSLMaxFragmentInputs)
-	fmt.Println("OpenGL extensions:", dev.GLExtensions)
+	fmt.Println("OpenGL extensions:", dev.GL.Extensions)
 }
 
 func main() {
