@@ -53,7 +53,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	// Create a simple shader.
 	shader := gfx.NewShader("SimpleShader")
 	shader.GLSL = &gfx.GLSLShader{
-		Vertex: glslVert,
+		Vertex:   glslVert,
 		Fragment: glslFrag,
 	}
 
