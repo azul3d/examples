@@ -31,6 +31,7 @@ varying vec4 frontColor;
 void main()
 {
 	frontColor = Color;
+	gl_PointSize = 25.0;
 	gl_Position = MVP * vec4(Vertex, 1.0);
 }
 `)
@@ -162,6 +163,21 @@ func gfxLoop(w window.Window, d gfx.Device) {
 					msaa := !d.MSAA()
 					d.SetMSAA(msaa)
 					fmt.Println("MSAA Enabled?", msaa)
+
+				case 'p':
+					triMesh.Lock()
+					triMesh.Primitive = gfx.Points
+					triMesh.Unlock()
+
+				case 't':
+					triMesh.Lock()
+					triMesh.Primitive = gfx.Triangles
+					triMesh.Unlock()
+
+				case 'l':
+					triMesh.Lock()
+					triMesh.Primitive = gfx.Lines
+					triMesh.Unlock()
 
 				case '1':
 					// Take a screenshot.
