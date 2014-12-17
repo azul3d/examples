@@ -7,10 +7,13 @@ package main
 
 import (
 	"fmt"
+	"go/build"
 	"image"
 	"image/png"
+	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 
 	"azul3d.org/gfx.v2-dev"
 	"azul3d.org/gfx.v2-dev/window"
@@ -18,34 +21,26 @@ import (
 	math "azul3d.org/lmath.v1"
 )
 
-var glslVert = []byte(`
-#version 120
+// This helper function is not an important example concept, please ignore it.
+//
+// absPath the absolute path to an file given one relative to the examples
+// directory:
+//  $GOPATH/src/azul3d.org/examples.v1
+var examplesDir string
 
-attribute vec3 Vertex;
-attribute vec4 Color;
-
-uniform mat4 MVP;
-
-varying vec4 frontColor;
-
-void main()
-{
-	frontColor = Color;
-	gl_PointSize = 25.0;
-	gl_Position = MVP * vec4(Vertex, 1.0);
+func absPath(relPath string) string {
+	if len(examplesDir) == 0 {
+		// Find assets directory.
+		for _, path := range filepath.SplitList(build.Default.GOPATH) {
+			path = filepath.Join(path, "src/azul3d.org/examples.v1")
+			if _, err := os.Stat(path); err == nil {
+				examplesDir = path
+				break
+			}
+		}
+	}
+	return filepath.Join(examplesDir, relPath)
 }
-`)
-
-var glslFrag = []byte(`
-#version 120
-
-varying vec4 frontColor;
-
-void main()
-{
-	gl_FragColor = frontColor;
-}
-`)
 
 var (
 	// Whether or not we should print the number of samples the triangle drew.
@@ -68,6 +63,16 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	// Move the camera -2 on the Y axis (back two units away from the triangle
 	// object).
 	camera.SetPos(math.Vec3{0, -2, 0})
+
+	// Loading shader files
+	glslVert, err := ioutil.ReadFile(absPath("azul3d_triangle/triangle.vert"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	glslFrag, err := ioutil.ReadFile(absPath("azul3d_triangle/triangle.frag"))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Create a simple shader.
 	shader := gfx.NewShader("SimpleShader")

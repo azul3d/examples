@@ -9,6 +9,7 @@ import (
 	"go/build"
 	"image"
 	_ "image/png"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -40,40 +41,6 @@ func absPath(relPath string) string {
 	return filepath.Join(examplesDir, relPath)
 }
 
-var glslVert = []byte(`
-#version 120
-
-attribute vec3 Vertex;
-attribute vec2 TexCoord0;
-
-uniform mat4 MVP;
-
-varying vec2 tc0;
-
-void main()
-{
-	tc0 = TexCoord0;
-	gl_Position = MVP * vec4(Vertex, 1.0);
-}
-`)
-
-var glslFrag = []byte(`
-#version 120
-
-varying vec2 tc0;
-
-uniform sampler2D Texture0;
-uniform bool BinaryAlpha;
-
-void main()
-{
-	gl_FragColor = texture2D(Texture0, tc0);
-	if(BinaryAlpha && gl_FragColor.a < 0.5) {
-		discard;
-	}
-}
-`)
-
 // gfxLoop is responsible for drawing things to the window.
 func gfxLoop(w window.Window, d gfx.Device) {
 	// Setup a camera to use a perspective projection.
@@ -84,6 +51,16 @@ func gfxLoop(w window.Window, d gfx.Device) {
 
 	// Move the camera back two units away from the card.
 	camera.SetPos(lmath.Vec3{0, -2, 0})
+
+	// Loading shader files
+	glslVert, err := ioutil.ReadFile(absPath("azul3d_texcoords/texcoords.vert"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	glslFrag, err := ioutil.ReadFile(absPath("azul3d_texcoords/texcoords.frag"))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Create a simple shader.
 	shader := gfx.NewShader("SimpleShader")
