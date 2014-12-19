@@ -144,38 +144,33 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	card.Textures = []*gfx.Texture{tex}
 	card.Meshes = []*gfx.Mesh{cardMesh}
 
-	go func() {
-		// Create a channel of events.
-		events := make(chan window.Event, 256)
+	// Create a channel of events.
+	events := make(chan window.Event, 256)
 
-		// Have the window notify our channel whenever events occur.
-		w.Notify(events, window.FramebufferResizedEvents|window.KeyboardTypedEvents)
+	// Have the window notify our channel whenever events occur.
+	w.Notify(events, window.FramebufferResizedEvents|window.KeyboardTypedEvents)
 
-		for e := range events {
+	for {
+		// Handle each pending event.
+		window.Poll(events, func(e window.Event) {
 			switch ev := e.(type) {
 			case window.FramebufferResized:
 				// Update the camera's projection matrix for the new width and
 				// height.
-				camera.Lock()
 				camera.SetOrtho(d.Bounds(), camNear, camFar)
-				camera.Unlock()
 
 			case keyboard.TypedEvent:
 				if ev.Rune == 'm' || ev.Rune == 'M' {
 					// Toggle mipmapping on the texture.
-					tex.Lock()
 					if tex.MinFilter == gfx.LinearMipmapLinear {
 						tex.MinFilter = gfx.Linear
 					} else {
 						tex.MinFilter = gfx.LinearMipmapLinear
 					}
-					tex.Unlock()
 				}
 			}
-		}
-	}()
+		})
 
-	for {
 		// Center the card in the window.
 		b := d.Bounds()
 		card.SetPos(lmath.Vec3{float64(b.Dx()) / 2.0, 0, float64(b.Dy()) / 2.0})
