@@ -6,12 +6,12 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"image/png"
 	"log"
-	gmath "math"
+	//"time"
+	"math"
 	"os"
 
 	"azul3d.org/gfx.v2-dev"
@@ -48,8 +48,119 @@ void main()
 }
 `)
 
+// mandelGen is a mandelbrot texture generator.
+type mandelGen struct {
+	// The channel of generated mandelbrot images. Only the last one received
+	// over this channel is valid.
+	Image chan image.Image
+
+	x, y       float64         // Center, e.g. x=-0.5, y=0.
+	zoom       float64         // Zoom, e.g. 1.0.
+	resolution int             // Resolution divisor, e.g. 8.
+	maxIter    int             // Maximum number of generator iterations, e.g. 1000.
+	needUpdate bool            // Whether or not we should generate an updated image.
+	bounds     image.Rectangle // The framebuffer's bounding rectangle.
+}
+
+// handle is called to handle a window event.
+func (m *mandelGen) handle(e window.Event) {
+	switch ev := e.(type) {
+	case window.FramebufferResized:
+		m.bounds = image.Rect(0, 0, ev.Width, ev.Height)
+
+	case mouse.Event:
+		if ev.Button == mouse.Right && ev.State == mouse.Down {
+			m.resolution += 2
+			if m.resolution > 8 {
+				m.resolution = 4
+			}
+			m.needUpdate = true
+		}
+
+	case mouse.Scrolled:
+		m.zoom += ev.Y * 0.06 * math.Abs(m.zoom)
+		m.needUpdate = true
+
+	case window.CursorMoved:
+		if ev.Delta {
+			m.x += (ev.X / 900.0) / math.Abs(m.zoom)
+			m.y += (ev.Y / 900.0) / math.Abs(m.zoom)
+			m.needUpdate = true
+		}
+	}
+}
+
+// generate is a small helper function to call Mandelbrot and insert a small
+// red square into the image. It then submits the image over the channel.
+func (m *mandelGen) generate() {
+	width := m.bounds.Dx() / m.resolution
+	height := m.bounds.Dy() / m.resolution
+	mbrot := Mandelbrot(width, height, m.maxIter, m.zoom, m.x, m.y)
+
+	// Insert a small red square in the top-left of the image for ensuring
+	// proper orientation exists in textures (this is just for testing).
+	for x := 0; x < 5; x++ {
+		for y := 0; y < 5; y++ {
+			mbrot.Set(x, y, color.RGBA{255, 0, 0, 255})
+		}
+	}
+	m.Image <- mbrot
+}
+
+// run is the mandelbrot generation goroutine. It listens for window events and
+// responds by generating new mandelbrot images if needed.
+func (m *mandelGen) run(w window.Window) {
+	// generate the initial mandelbrot image right now.
+	m.generate()
+
+	// Have the window notify us of specific events.
+	evMask := window.MouseEvents
+	evMask |= window.MouseScrolledEvents
+	evMask |= window.FramebufferResizedEvents
+	evMask |= window.CursorMovedEvents
+	event := make(chan window.Event, 256)
+	w.Notify(event, evMask)
+
+	// Wait for window events.
+	for {
+		// Wait for one window event now.
+		m.handle(<-event)
+
+		// Handle as many window events as possible now. We do this because
+		// generating mandelbrot images on the CPU is expensive, so we only
+		// want to do it for the very last event.
+		window.Poll(event, m.handle)
+
+		// If we need to update, generate the next mandelbrot image.
+		if m.needUpdate {
+			m.needUpdate = false
+			m.generate()
+		}
+	}
+}
+
+// newMandelGen returns a new mandelbrot generator.
+func newMandelGen(w window.Window, d gfx.Device) *mandelGen {
+	m := &mandelGen{
+		Image:      make(chan image.Image),
+		x:          -.5,
+		y:          0,
+		zoom:       1,
+		resolution: 8,
+		maxIter:    1000,
+		bounds:     d.Bounds(),
+	}
+
+	// Spawn the mandelbrot generation goroutine.
+	go m.run(w)
+	return m
+}
+
 // gfxLoop is responsible for drawing things to the window.
 func gfxLoop(w window.Window, d gfx.Device) {
+	// Create a new mandelbrot generator.
+	gen := newMandelGen(w, d)
+
 	// Create a simple shader.
 	shader := gfx.NewShader("SimpleShader")
 	shader.GLSL = &gfx.GLSLSources{
@@ -86,145 +197,81 @@ func gfxLoop(w window.Window, d gfx.Device) {
 		},
 	}
 
+	// Create the texture that will display the image. We could use DXT texture
+	// compression normally here, but because we want to download the texture
+	// back to the CPU we must not.
+	tex := gfx.NewTexture()
+	tex.MinFilter = gfx.Nearest
+	tex.MagFilter = gfx.Nearest
+	tex.KeepDataOnLoad = true
+	tex.Source = <-gen.Image // Wait for the first image to be generated.
+
 	// Create a card object.
 	card := gfx.NewObject()
 	card.Shader = shader
-	card.Textures = []*gfx.Texture{nil}
+	card.Textures = []*gfx.Texture{tex}
 	card.Meshes = []*gfx.Mesh{cardMesh}
 
-	// Create a texture.
-	zoom := 1.0
-	x := -0.5
-	y := 0.0
-	res := 8
-	maxIter := 1000
-	updateTex := func() {
-		width, height := d.Bounds().Dx(), d.Bounds().Dy()
-		mbrot := Mandelbrot(width/res, height/res, maxIter, zoom, x, y)
+	// Get notified of mouse events and keyboard typing events.
+	events := make(chan window.Event, 1)
+	w.Notify(events, window.MouseEvents|window.KeyboardTypedEvents)
 
-		// Insert a small red square in the top-left of the image for ensuring
-		// proper orientation exists in textures (this is just for testing).
-		for x := 0; x < 20; x++ {
-			for y := 0; y < 20; y++ {
-				mbrot.Set(x, y, color.RGBA{255, 0, 0, 255})
-			}
-		}
-
-		// Create new texture and ask the renderer to load it. We don't use DXT
-		// compression because those textures cannot be downloaded.
-		tex := gfx.NewTexture()
-		tex.Source = mbrot
-		tex.MinFilter = gfx.Nearest
-		tex.MagFilter = gfx.Nearest
-
-		onLoad := make(chan *gfx.Texture, 1)
-		d.LoadTexture(tex, onLoad)
-		<-onLoad
-
-		// Swap the texture with the old one on the card.
-		card.Lock()
-		card.Textures[0] = tex
-		card.Unlock()
-	}
-	updateTex()
-
-	go func() {
-		handle := func(e window.Event) (needUpdate bool) {
+	for {
+		// Handle each pending event.
+		window.Poll(events, func(e window.Event) {
 			switch ev := e.(type) {
 			case mouse.Event:
+				// Toggle mouse grab when the user left clicks.
 				if ev.Button == mouse.Left && ev.State == mouse.Down {
 					props := w.Props()
 					props.SetCursorGrabbed(!props.CursorGrabbed())
 					w.Request(props)
 				}
 
-				if ev.Button == mouse.Right && ev.State == mouse.Down {
-					res += 2
-					if res > 8 {
-						res = 4
-					}
-					return true
-				}
-
-			case mouse.Scrolled:
-				zoom += ev.Y * 0.06 * gmath.Abs(zoom)
-
 			case keyboard.TypedEvent:
 				if ev.Rune == 's' || ev.Rune == 'S' {
-					fmt.Println("Writing texture to file...")
-					// Download the image from the graphics hardware and save
-					// it to disk.
+					log.Println("Writing texture to file...")
+
+					// Download the texture image from the graphics hardware
+					// and save it to disk.
 					complete := make(chan image.Image, 1)
 
-					// Lock the card/texture.
-					card.RLock()
-					card.Textures[0].Lock()
+					// Begin the texture download.
+					card.Textures[0].Download(card.Textures[0].Bounds, complete)
 
-					// Begin downloading it's texture.
-					card.Textures[0].Download(image.Rect(0, 0, 640, 480), complete)
-
-					// Unlock the texture/card.
-					card.Textures[0].Unlock()
-					card.RUnlock()
-
-					img := <-complete // Wait for download to complete.
-					if img == nil {
-						fmt.Println("Failed to download texture.")
-					} else {
-						// Save to png.
-						f, err := os.Create("mandel.png")
-						if err != nil {
-							log.Fatal(err)
+					// The download can occur in any goroutine!
+					go func() {
+						img := <-complete // Wait for download to complete.
+						if img == nil {
+							log.Println("Failed to download texture.")
+						} else {
+							// Save to png.
+							f, err := os.Create("mandel.png")
+							if err != nil {
+								log.Fatal(err)
+							}
+							err = png.Encode(f, img)
+							if err != nil {
+								log.Fatal(err)
+							}
+							log.Println("Wrote texture to mandel.png")
 						}
-						err = png.Encode(f, img)
-						if err != nil {
-							log.Fatal(err)
-						}
-						fmt.Println("Wrote texture to mandel.png")
-					}
-				}
-
-			case window.CursorMoved:
-				if ev.Delta {
-					x += (ev.X / 900.0) / gmath.Abs(zoom)
-					y += (ev.Y / 900.0) / gmath.Abs(zoom)
-					return true
+					}()
 				}
 			}
-			return false
+		})
+
+		// If the mandelbrot generator has a new image for us, update the
+		// texture.
+		select {
+		case img := <-gen.Image:
+			card.Textures[0].Loaded = false
+			card.Textures[0].Source = img
+			card.Textures[0].Bounds = img.Bounds()
+		default:
+			break
 		}
 
-		// Create an event mask for the events we are interested in.
-		evMask := window.MouseEvents
-		evMask |= window.MouseScrolledEvents
-		evMask |= window.KeyboardTypedEvents
-		evMask |= window.CursorMovedEvents
-
-		// Create a channel of events.
-		events := make(chan window.Event, 256)
-
-		// Have the window notify our channel whenever events occur.
-		w.Notify(events, evMask)
-
-		// Wait for events, we process them in large batches because updateTex
-		// calculate a mandelbrot on the CPU and it's very slow.
-		for {
-			e := <-events
-			needUpdate := handle(e)
-			l := len(events)
-			for i := 0; i < l; i++ {
-				if handle(<-events) {
-					needUpdate = true
-				}
-			}
-			if needUpdate {
-				// Generate new mandel texture.
-				updateTex()
-			}
-		}
-	}()
-
-	for {
 		// Clear color and depth buffers.
 		d.Clear(d.Bounds(), gfx.Color{1, 1, 1, 1})
 		d.ClearDepth(d.Bounds(), 1.0)
