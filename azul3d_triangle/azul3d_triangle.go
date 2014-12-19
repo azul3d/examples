@@ -47,6 +47,12 @@ void main()
 }
 `)
 
+const (
+	camFOV  = 75.0
+	camNear = 0.0001
+	camFar  = 1000.0
+)
+
 var (
 	// Whether or not we should print the number of samples the triangle drew.
 	printSamples bool
@@ -60,9 +66,6 @@ var (
 func gfxLoop(w window.Window, d gfx.Device) {
 	// Setup a camera to use a perspective projection.
 	camera := gfx.NewCamera()
-	camFOV := 75.0
-	camNear := 0.0001
-	camFar := 1000.0
 	camera.SetPersp(d.Bounds(), camFOV, camNear, camFar)
 
 	// Move the camera -2 on the Y axis (back two units away from the triangle
@@ -76,7 +79,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 		Fragment: glslFrag,
 	}
 
-	// Create a triangle mesh.
+	// Initialize the triangle mesh.
 	triMesh := gfx.NewMesh()
 	triMesh.Vertices = []gfx.Vec3{
 		// Top
@@ -130,26 +133,24 @@ func gfxLoop(w window.Window, d gfx.Device) {
 
 	triangle.Transform.SetParent(left)
 
-	// Spawn a goroutine to handle events.
-	go func() {
-		// Create an event mask for the events we are interested in.
-		evMask := window.FramebufferResizedEvents
-		evMask |= window.KeyboardTypedEvents
+	// Create an event mask for the events we are interested in.
+	evMask := window.FramebufferResizedEvents
+	evMask |= window.KeyboardTypedEvents
 
-		// Create a channel of events.
-		events := make(chan window.Event, 256)
+	// Create a channel of events.
+	events := make(chan window.Event, 256)
 
-		// Have the window notify our channel whenever events occur.
-		w.Notify(events, evMask)
+	// Have the window notify our channel whenever events occur.
+	w.Notify(events, evMask)
 
-		for e := range events {
+	for {
+		// Handle each pending event.
+		window.Poll(events, func(e window.Event) {
 			switch ev := e.(type) {
 			case window.FramebufferResized:
 				// Update the camera's projection matrix for the new width and
 				// height.
-				camera.Lock()
-				camera.SetPersp(d.Bounds(), camFOV, camNear, camFar)
-				camera.Unlock()
+				camera.SetPersp(image.Rect(0, 0, ev.Width, ev.Height), camFOV, camNear, camFar)
 
 			case keyboard.TypedEvent:
 				switch ev.Rune {
@@ -165,19 +166,13 @@ func gfxLoop(w window.Window, d gfx.Device) {
 					fmt.Println("MSAA Enabled?", msaa)
 
 				case 'p':
-					triMesh.Lock()
 					triMesh.Primitive = gfx.Points
-					triMesh.Unlock()
 
 				case 't':
-					triMesh.Lock()
 					triMesh.Primitive = gfx.Triangles
-					triMesh.Unlock()
 
 				case 'l':
-					triMesh.Lock()
 					triMesh.Primitive = gfx.Lines
-					triMesh.Unlock()
 
 				case '1':
 					// Take a screenshot.
@@ -206,10 +201,8 @@ func gfxLoop(w window.Window, d gfx.Device) {
 					w.Request(props)
 				}
 			}
-		}
-	}()
+		})
 
-	for {
 		var v math.Vec2
 		// Depending on keyboard state, transform the triangle.
 		kb := w.Keyboard()
@@ -230,7 +223,6 @@ func gfxLoop(w window.Window, d gfx.Device) {
 		v = v.MulScalar(d.Clock().Dt())
 
 		// Update the triangle's transformation matrix.
-		triangle.RLock()
 		if kb.Down(keyboard.R) {
 			// Reset transformation.
 			oldParent := triangle.Transform.Parent()
@@ -273,7 +265,6 @@ func gfxLoop(w window.Window, d gfx.Device) {
 			}
 			triangle.SetPos(triangle.Pos().Add(p.MulScalar(3)))
 		}
-		triangle.RUnlock()
 
 		// Clear color and depth buffers.
 		d.Clear(d.Bounds(), gfx.Color{1, 1, 1, 1})
@@ -315,14 +306,8 @@ func gfxLoop(w window.Window, d gfx.Device) {
 
 		// Print if the triangle's center is in the view of the camera.
 		if printInView {
-			triangle.RLock()
-			tp := triangle.Pos()
-			triangle.RUnlock()
-
-			camera.RLock()
-			proj, ok := camera.Project(tp)
+			proj, ok := camera.Project(triangle.Pos())
 			fmt.Println("In view?", ok, proj)
-			camera.RUnlock()
 		}
 	}
 }
