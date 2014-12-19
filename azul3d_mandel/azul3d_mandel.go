@@ -6,13 +6,15 @@
 package main
 
 import (
+	"go/build"
 	"image"
 	"image/color"
 	"image/png"
+	"io/ioutil"
 	"log"
-	//"time"
 	"math"
 	"os"
+	"path/filepath"
 
 	"azul3d.org/gfx.v2-dev"
 	"azul3d.org/gfx.v2-dev/window"
@@ -20,33 +22,26 @@ import (
 	"azul3d.org/mouse.v1"
 )
 
-var glslVert = []byte(`
-#version 120
+// This helper function is not an important example concept, please ignore it.
+//
+// absPath the absolute path to an file given one relative to the examples
+// directory:
+//  $GOPATH/src/azul3d.org/examples.v1
+var examplesDir string
 
-attribute vec3 Vertex;
-attribute vec2 TexCoord0;
-
-varying vec2 tc0;
-
-void main()
-{
-	tc0 = TexCoord0;
-	gl_Position = vec4(Vertex, 1.0);
+func absPath(relPath string) string {
+	if len(examplesDir) == 0 {
+		// Find assets directory.
+		for _, path := range filepath.SplitList(build.Default.GOPATH) {
+			path = filepath.Join(path, "src/azul3d.org/examples.v1")
+			if _, err := os.Stat(path); err == nil {
+				examplesDir = path
+				break
+			}
+		}
+	}
+	return filepath.Join(examplesDir, relPath)
 }
-`)
-
-var glslFrag = []byte(`
-#version 120
-
-varying vec2 tc0;
-
-uniform sampler2D Texture0;
-
-void main()
-{
-	gl_FragColor = texture2D(Texture0, tc0);
-}
-`)
 
 // mandelGen is a mandelbrot texture generator.
 type mandelGen struct {
@@ -160,6 +155,16 @@ func newMandelGen(w window.Window, d gfx.Device) *mandelGen {
 func gfxLoop(w window.Window, d gfx.Device) {
 	// Create a new mandelbrot generator.
 	gen := newMandelGen(w, d)
+
+	// Loading shader files
+	glslVert, err := ioutil.ReadFile(absPath("azul3d_mandel/mandel.vert"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	glslFrag, err := ioutil.ReadFile(absPath("azul3d_mandel/mandel.frag"))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Create a simple shader.
 	shader := gfx.NewShader("SimpleShader")

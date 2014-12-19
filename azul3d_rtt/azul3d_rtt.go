@@ -6,8 +6,12 @@
 package main
 
 import (
+	"go/build"
 	"image"
+	"io/ioutil"
 	"log"
+	"os"
+	"path/filepath"
 
 	"azul3d.org/gfx.v2-dev"
 	"azul3d.org/gfx.v2-dev/window"
@@ -15,39 +19,26 @@ import (
 	"azul3d.org/lmath.v1"
 )
 
-var glslVert = []byte(`
-#version 120
+// This helper function is not an important example concept, please ignore it.
+//
+// absPath the absolute path to an file given one relative to the examples
+// directory:
+//  $GOPATH/src/azul3d.org/examples.v1
+var examplesDir string
 
-attribute vec3 Vertex;
-attribute vec2 TexCoord0;
-
-uniform mat4 MVP;
-
-varying vec2 tc0;
-
-void main()
-{
-	tc0 = TexCoord0;
-	gl_Position = MVP * vec4(Vertex, 1.0);
-}
-`)
-
-var glslFrag = []byte(`
-#version 120
-
-varying vec2 tc0;
-
-uniform sampler2D Texture0;
-uniform bool BinaryAlpha;
-
-void main()
-{
-	gl_FragColor = texture2D(Texture0, tc0);
-	if(BinaryAlpha && gl_FragColor.a < 0.5) {
-		discard;
+func absPath(relPath string) string {
+	if len(examplesDir) == 0 {
+		// Find assets directory.
+		for _, path := range filepath.SplitList(build.Default.GOPATH) {
+			path = filepath.Join(path, "src/azul3d.org/examples.v1")
+			if _, err := os.Stat(path); err == nil {
+				examplesDir = path
+				break
+			}
+		}
 	}
+	return filepath.Join(examplesDir, relPath)
 }
-`)
 
 // gfxLoop is responsible for drawing things to the window.
 func gfxLoop(w window.Window, d gfx.Device) {
@@ -92,6 +83,16 @@ func gfxLoop(w window.Window, d gfx.Device) {
 		// Important! Check if the canvas is nil. If it is their graphics
 		// hardware doesn't support render to texture. Sorry!
 		log.Fatal("Graphics hardware does not support render to texture.")
+	}
+
+	// Loading shader files
+	glslVert, err := ioutil.ReadFile(absPath("azul3d_rtt/rtt.vert"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	glslFrag, err := ioutil.ReadFile(absPath("azul3d_rtt/rtt.frag"))
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// Create a simple shader.
