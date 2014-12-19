@@ -14,7 +14,6 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
-	"sync"
 	"time"
 
 	"azul3d.org/gfx.v2-dev"
@@ -206,18 +205,13 @@ func createShape(d gfx.Device, path string, which int) *gfx.Object {
 	return card
 }
 
-var shapes struct {
-	sync.Mutex
-	slice []*gfx.Object
-}
+var shapes []*gfx.Object
 
 // Tells if the shape is within twice the window's size or not. We use twice
 // the size to account for the largeness of the shape.
 func isDead(camera *gfx.Camera, shape *gfx.Object) bool {
 	worldPos := shape.ConvertPos(shape.Pos(), gfx.LocalToWorld)
-	camera.RLock()
 	viewPos, _ := camera.Project(worldPos)
-	camera.RUnlock()
 	xValid := viewPos.X < 2 && viewPos.X > -2
 	yValid := viewPos.Y < 2
 	if !xValid || !yValid {
@@ -226,73 +220,71 @@ func isDead(camera *gfx.Camera, shape *gfx.Object) bool {
 	return false
 }
 
-func shapeSpawner(d gfx.Device, shader *gfx.Shader, camera *gfx.Camera) {
-	butterfly := time.Tick(time.Second / 4)
-	other := time.Tick(time.Second / 2)
+var (
+	butterfly = time.Tick(time.Second / 4)
+	other     = time.Tick(time.Second / 2)
+)
 
-	for {
-		// Butterfly.
-		which := 0
+func updateShapes(d gfx.Device, shader *gfx.Shader, camera *gfx.Camera) {
+	// Butterfly.
+	which := 0
 
-		select {
-		case <-butterfly:
-		case <-other:
-			which = int(rand.Float64() * 4)
-		}
-
-		// Create a shape.
-		shape := createShape(d, absPath("azul3d_stencil/shapes.png"), which)
-		shape.Shader = shader
-		shape.SetPos(math.Vec3{0, -1, 0})
-
-		// Give the shape a random scale.
-		var s float64
-		if which == 0 {
-			s = rand.Float64() * 0.42
-			if s < 0.2 {
-				s = 0.2
-			}
-		} else {
-			// Stars and other things are smaller.
-			s = rand.Float64() * 0.21
-			if s < 0.1 {
-				s = 0.1
-			}
-		}
-		shape.SetScale(math.Vec3{s, s, s})
-
-		// Give the shape a random position.
-		x := (rand.Float64() * 2.0) - 1.0
-		y := (rand.Float64() * 2.0) - 4.0
-		shape.SetPos(math.Vec3{x, 0, y})
-
-		// Give the shape a random rotation.
-		r := ((rand.Float64() * 2.0) - 1.0) * 45
-		shape.SetRot(math.Vec3{0, r, 0})
-
-		shapes.Lock()
-
-		// Remove dead shapes.
-		n := len(shapes.slice)
-		i := 0
-	l:
-		for i < n {
-			if isDead(camera, shapes.slice[i]) {
-				// Release object for re-use.
-				shapes.slice[i].Destroy()
-
-				// Remove from slice.
-				shapes.slice[i] = shapes.slice[n-1]
-				n--
-				continue l
-			}
-			i++
-		}
-		shapes.slice = shapes.slice[:n]
-
-		shapes.slice = append(shapes.slice, shape)
-		shapes.Unlock()
+	select {
+	default:
+		return
+	case <-butterfly:
+	case <-other:
+		which = int(rand.Float64() * 4)
 	}
+
+	// Create a shape.
+	shape := createShape(d, absPath("azul3d_stencil/shapes.png"), which)
+	shape.Shader = shader
+	shape.SetPos(math.Vec3{0, -1, 0})
+
+	// Give the shape a random scale.
+	var s float64
+	if which == 0 {
+		s = rand.Float64() * 0.42
+		if s < 0.2 {
+			s = 0.2
+		}
+	} else {
+		// Stars and other things are smaller.
+		s = rand.Float64() * 0.21
+		if s < 0.1 {
+			s = 0.1
+		}
+	}
+	shape.SetScale(math.Vec3{s, s, s})
+
+	// Give the shape a random position.
+	x := (rand.Float64() * 2.0) - 1.0
+	y := (rand.Float64() * 2.0) - 4.0
+	shape.SetPos(math.Vec3{x, 0, y})
+
+	// Give the shape a random rotation.
+	r := ((rand.Float64() * 2.0) - 1.0) * 45
+	shape.SetRot(math.Vec3{0, r, 0})
+
+	// Remove dead shapes.
+	n := len(shapes)
+	i := 0
+l:
+	for i < n {
+		if isDead(camera, shapes[i]) {
+			// Release object for re-use.
+			shapes[i].Destroy()
+
+			// Remove from slice.
+			shapes[i] = shapes[n-1]
+			n--
+			continue l
+		}
+		i++
+	}
+	shapes = shapes[:n]
+	shapes = append(shapes, shape)
 }
 
 // gfxLoop is responsible for drawing things to the window.
@@ -335,24 +327,20 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	c := gfx.NewCamera()
 	c.SetPos(math.Vec3{0, -2, 0})
 
-	// Start the shape spawner.
-	go shapeSpawner(d, shader, c)
-
 	for {
+		updateShapes(d, shader, c)
+
 		bounds := d.Bounds()
 		xRatio := float64(bounds.Dx()) / float64(bounds.Dy())
 		m := math.Mat4Ortho(-xRatio, xRatio, -1, 1, 0.001, 100.0)
-		c.Lock()
 		c.Projection = gfx.ConvertMat4(m)
-		c.Unlock()
 
 		// Clear the color, depth, and stencil buffers.
 		d.Clear(d.Bounds(), gfx.Color{0, 0, 0, 1})
 		d.ClearDepth(d.Bounds(), 1.0)
 		d.ClearStencil(d.Bounds(), 0)
 
-		shapes.Lock()
-		for _, shape := range shapes.slice {
+		for _, shape := range shapes {
 			// Skip drawing of shapes that are dead.
 			if isDead(c, shape) {
 				continue
@@ -371,7 +359,6 @@ func gfxLoop(w window.Window, d gfx.Device) {
 			// Draw the shape.
 			d.Draw(d.Bounds(), shape, c)
 		}
-		shapes.Unlock()
 
 		// Draw the background picture.
 		d.Draw(d.Bounds(), bgPicture, c)

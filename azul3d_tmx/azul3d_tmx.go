@@ -70,15 +70,12 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	camZoomSpeed := 0.01 // 0.01x zoom for each scroll wheel click.
 	camMinZoom := 0.1
 
-	// updateCamera simply locks the camera, and calls setOrthoScale with the
-	// values above, and then unlocks the camera.
+	// updateCamera simply calls setOrthoScale with the values above.
 	updateCamera := func() {
 		if camZoom < camMinZoom {
 			camZoom = camMinZoom
 		}
-		camera.Lock()
 		setOrthoScale(camera, d.Bounds(), camZoom, camNear, camFar)
-		camera.Unlock()
 	}
 
 	// Update the camera now.
@@ -105,60 +102,52 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	// Have the window notify our channel whenever events occur.
 	w.Notify(events, evMask)
 
-	handleEvents := func() {
-		limit := len(events)
-		for i := 0; i < limit; i++ {
-			e := <-events
-			switch ev := e.(type) {
-			case window.FramebufferResized:
-				// Update the camera's to account for the new width and height.
+	handleEvent := func(e window.Event) {
+		switch ev := e.(type) {
+		case window.FramebufferResized:
+			// Update the camera's to account for the new width and height.
+			updateCamera()
+
+		case mouse.Event:
+			if ev.Button == mouse.Left && ev.State == mouse.Up {
+				// Toggle mouse grab.
+				props := w.Props()
+				props.SetCursorGrabbed(!props.CursorGrabbed())
+				w.Request(props)
+			}
+			if ev.Button == mouse.Wheel && ev.State == mouse.ScrollForward {
+				// Zoom in, and update the camera.
+				camZoom -= camZoomSpeed
 				updateCamera()
+			}
+			if ev.Button == mouse.Wheel && ev.State == mouse.ScrollBack {
+				// Zoom out, and update the camera.
+				camZoom += camZoomSpeed
+				updateCamera()
+			}
 
-			case mouse.Event:
-				if ev.Button == mouse.Left && ev.State == mouse.Up {
-					// Toggle mouse grab.
-					props := w.Props()
-					props.SetCursorGrabbed(!props.CursorGrabbed())
-					w.Request(props)
-				}
-				if ev.Button == mouse.Wheel && ev.State == mouse.ScrollForward {
-					// Zoom in, and update the camera.
-					camZoom -= camZoomSpeed
-					updateCamera()
-				}
-				if ev.Button == mouse.Wheel && ev.State == mouse.ScrollBack {
-					// Zoom out, and update the camera.
-					camZoom += camZoomSpeed
-					updateCamera()
-				}
+		case window.CursorMoved:
+			if ev.Delta {
+				p := lmath.Vec3{ev.X, 0, -ev.Y}
+				camera.SetPos(camera.Pos().Add(p))
+			}
 
-			case window.CursorMoved:
-				if ev.Delta {
-					p := lmath.Vec3{ev.X, 0, -ev.Y}
-					camera.Lock()
-					camera.SetPos(camera.Pos().Add(p))
-					camera.Unlock()
-				}
-
-			case keyboard.TypedEvent:
-				switch ev.Rune {
-				case 'm':
-					// Toggle MSAA now.
-					msaa := !d.MSAA()
-					d.SetMSAA(msaa)
-					fmt.Println("MSAA Enabled?", msaa)
-				case 'r':
-					camera.Lock()
-					camera.SetPos(lmath.Vec3{0, -2, 0})
-					camera.Unlock()
-				}
+		case keyboard.TypedEvent:
+			switch ev.Rune {
+			case 'm':
+				// Toggle MSAA now.
+				msaa := !d.MSAA()
+				d.SetMSAA(msaa)
+				fmt.Println("MSAA Enabled?", msaa)
+			case 'r':
+				camera.SetPos(lmath.Vec3{0, -2, 0})
 			}
 		}
 	}
 
 	for {
 		// Handle events.
-		handleEvents()
+		window.Poll(events, handleEvent)
 
 		// Clear color and depth buffers.
 		d.Clear(d.Bounds(), gfx.Color{1, 1, 1, 1})

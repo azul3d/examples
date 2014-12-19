@@ -84,7 +84,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 		// hardware doesn't support render to texture. Sorry!
 		log.Fatal("Graphics hardware does not support render to texture.")
 	}
-	
+
 	// Loading shader files
 	glslVert, err := ioutil.ReadFile(absPath("azul3d_rtt/rtt.vert"))
 	if err != nil {
@@ -94,7 +94,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	// Create a simple shader.
 	shader := gfx.NewShader("SimpleShader")
 	shader.GLSL = &gfx.GLSLSources{
@@ -137,41 +137,15 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	card.Textures = []*gfx.Texture{rtColor}
 	card.Meshes = []*gfx.Mesh{cardMesh}
 
-	// Spawn a goroutine to handle events.
-	go func() {
-		// Create an event mask for the events we are interested in.
-		evMask := window.FramebufferResizedEvents
-		evMask |= window.KeyboardTypedEvents
+	// Create an event mask for the events we are interested in.
+	evMask := window.FramebufferResizedEvents
+	evMask |= window.KeyboardTypedEvents
 
-		// Create a channel of events.
-		events := make(chan window.Event, 256)
+	// Create a channel of events.
+	event := make(chan window.Event, 256)
 
-		// Have the window notify our channel whenever events occur.
-		w.Notify(events, evMask)
-
-		for e := range events {
-			switch ev := e.(type) {
-			case window.FramebufferResized:
-				// Update the camera's projection matrix for the new width and
-				// height.
-				camera.Lock()
-				camera.SetPersp(d.Bounds(), camFOV, camNear, camFar)
-				camera.Unlock()
-
-			case keyboard.TypedEvent:
-				if ev.Rune == 'm' || ev.Rune == 'M' {
-					// Toggle mipmapping.
-					rtColor.Lock()
-					if rtColor.MinFilter == gfx.LinearMipmapLinear {
-						rtColor.MinFilter = gfx.Linear
-					} else {
-						rtColor.MinFilter = gfx.LinearMipmapLinear
-					}
-					rtColor.Unlock()
-				}
-			}
-		}
-	}()
+	// Have the window notify our channel whenever events occur.
+	w.Notify(event, evMask)
 
 	// Draw some colored stripes onto the render to texture canvas. The result
 	// is stored in the rtColor texture, and we can then display it on a card
@@ -196,6 +170,26 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	rtCanvas.Render()
 
 	for {
+		// Handle each pending event.
+		window.Poll(event, func(e window.Event) {
+			switch ev := e.(type) {
+			case window.FramebufferResized:
+				// Update the camera's projection matrix for the new width and
+				// height.
+				camera.SetPersp(d.Bounds(), camFOV, camNear, camFar)
+
+			case keyboard.TypedEvent:
+				if ev.Rune == 'm' || ev.Rune == 'M' {
+					// Toggle mipmapping.
+					if rtColor.MinFilter == gfx.LinearMipmapLinear {
+						rtColor.MinFilter = gfx.Linear
+					} else {
+						rtColor.MinFilter = gfx.LinearMipmapLinear
+					}
+				}
+			}
+		})
+
 		// Rotate the card on the Z axis 15 degrees/sec.
 		rot := card.Rot()
 		card.SetRot(lmath.Vec3{
