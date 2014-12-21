@@ -6,42 +6,21 @@
 package main
 
 import (
-	"go/build"
 	"image"
 	"image/color"
 	"image/png"
 	"log"
 	"math"
 	"os"
-	"path/filepath"
 
 	"azul3d.org/gfx.v2-dev"
 	"azul3d.org/gfx.v2-dev/gfxutil"
 	"azul3d.org/gfx.v2-dev/window"
 	"azul3d.org/keyboard.v1"
 	"azul3d.org/mouse.v1"
+
+	"azul3d.org/examples.v1/abs"
 )
-
-// This helper function is not an important example concept, please ignore it.
-//
-// absPath the absolute path to an file given one relative to the examples
-// directory:
-//  $GOPATH/src/azul3d.org/examples.v1
-var examplesDir string
-
-func absPath(relPath string) string {
-	if len(examplesDir) == 0 {
-		// Find assets directory.
-		for _, path := range filepath.SplitList(build.Default.GOPATH) {
-			path = filepath.Join(path, "src/azul3d.org/examples.v1")
-			if _, err := os.Stat(path); err == nil {
-				examplesDir = path
-				break
-			}
-		}
-	}
-	return filepath.Join(examplesDir, relPath)
-}
 
 // mandelGen is a mandelbrot texture generator.
 type mandelGen struct {
@@ -157,7 +136,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	gen := newMandelGen(w, d)
 
 	// Read the GLSL shaders from disk.
-	shader, err := gfxutil.OpenShader(absPath("azul3d_mandel/mandel"))
+	shader, err := gfxutil.OpenShader(abs.Path("azul3d_mandel/mandel"))
 	if err != nil {
 		log.Fatal(err)
 	}

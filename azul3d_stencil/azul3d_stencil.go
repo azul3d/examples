@@ -6,40 +6,18 @@
 package main
 
 import (
-	"go/build"
 	_ "image/png"
 	"log"
 	"math/rand"
-	"os"
-	"path/filepath"
 	"time"
 
 	"azul3d.org/gfx.v2-dev"
 	"azul3d.org/gfx.v2-dev/gfxutil"
 	"azul3d.org/gfx.v2-dev/window"
 	math "azul3d.org/lmath.v1"
+
+	"azul3d.org/examples.v1/abs"
 )
-
-// This helper function is not an important example concept, please ignore it.
-//
-// absPath the absolute path to an file given one relative to the examples
-// directory:
-//  $GOPATH/src/azul3d.org/examples.v1
-var examplesDir string
-
-func absPath(relPath string) string {
-	if len(examplesDir) == 0 {
-		// Find assets directory.
-		for _, path := range filepath.SplitList(build.Default.GOPATH) {
-			path = filepath.Join(path, "src/azul3d.org/examples.v1")
-			if _, err := os.Stat(path); err == nil {
-				examplesDir = path
-				break
-			}
-		}
-	}
-	return filepath.Join(examplesDir, relPath)
-}
 
 // Creates and returns a card mesh.
 func cardMesh(w, h float32) *gfx.Mesh {
@@ -202,7 +180,7 @@ func updateShapes(d gfx.Device, shader *gfx.Shader, camera *gfx.Camera) {
 	}
 
 	// Create a shape.
-	shape := createShape(d, absPath("azul3d_stencil/shapes.png"), which)
+	shape := createShape(d, abs.Path("azul3d_stencil/shapes.png"), which)
 	shape.Shader = shader
 	shape.SetPos(math.Vec3{0, -1, 0})
 
@@ -258,13 +236,13 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	}
 
 	// Read the GLSL shaders from disk.
-	shader, err := gfxutil.OpenShader(absPath("azul3d_stencil/stencil"))
+	shader, err := gfxutil.OpenShader(abs.Path("azul3d_stencil/stencil"))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Create the background.
-	bgPicture := createPicture(d, absPath("azul3d_stencil/yi_han_cheol.png"))
+	bgPicture := createPicture(d, abs.Path("azul3d_stencil/yi_han_cheol.png"))
 	bgPicture.Shader = shader
 	bgPicture.State.StencilTest = true
 	bgPicture.State.StencilFront = gfx.StencilState{

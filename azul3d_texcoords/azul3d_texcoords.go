@@ -6,39 +6,17 @@
 package main
 
 import (
-	"go/build"
 	_ "image/png"
 	"log"
-	"os"
-	"path/filepath"
 
 	"azul3d.org/gfx.v2-dev"
 	"azul3d.org/gfx.v2-dev/gfxutil"
 	"azul3d.org/gfx.v2-dev/window"
 	"azul3d.org/keyboard.v1"
 	"azul3d.org/lmath.v1"
+
+	"azul3d.org/examples.v1/abs"
 )
-
-// This helper function is not an important example concept, please ignore it.
-//
-// absPath the absolute path to an file given one relative to the examples
-// directory:
-//  $GOPATH/src/azul3d.org/examples.v1
-var examplesDir string
-
-func absPath(relPath string) string {
-	if len(examplesDir) == 0 {
-		// Find assets directory.
-		for _, path := range filepath.SplitList(build.Default.GOPATH) {
-			path = filepath.Join(path, "src/azul3d.org/examples.v1")
-			if _, err := os.Stat(path); err == nil {
-				examplesDir = path
-				break
-			}
-		}
-	}
-	return filepath.Join(examplesDir, relPath)
-}
 
 // gfxLoop is responsible for drawing things to the window.
 func gfxLoop(w window.Window, d gfx.Device) {
@@ -52,13 +30,13 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	camera.SetPos(lmath.Vec3{0, -2, 0})
 
 	// Read the GLSL shaders from disk.
-	shader, err := gfxutil.OpenShader(absPath("azul3d_texcoords/texcoords"))
+	shader, err := gfxutil.OpenShader(abs.Path("azul3d_texcoords/texcoords"))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Open the texture.
-	tex, err := gfxutil.OpenTexture(absPath("azul3d_texcoords/texture_coords_1024x1024.png"))
+	tex, err := gfxutil.OpenTexture(abs.Path("azul3d_texcoords/texture_coords_1024x1024.png"))
 	if err != nil {
 		log.Fatal(err)
 	}

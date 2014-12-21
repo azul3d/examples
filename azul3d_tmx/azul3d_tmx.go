@@ -8,12 +8,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"go/build"
 	"image"
 	_ "image/png"
 	"log"
-	"os"
-	"path/filepath"
 
 	"azul3d.org/gfx.v2-dev"
 	"azul3d.org/gfx.v2-dev/window"
@@ -21,28 +18,9 @@ import (
 	"azul3d.org/lmath.v1"
 	"azul3d.org/mouse.v1"
 	"azul3d.org/tmx.dev"
+
+	"azul3d.org/examples.v1/abs"
 )
-
-// This helper function is not an important example concept, please ignore it.
-//
-// absPath the absolute path to an file given one relative to the examples
-// directory:
-//  $GOPATH/src/azul3d.org/examples.dev
-var examplesDir string
-
-func absPath(relPath string) string {
-	if len(examplesDir) == 0 {
-		// Find assets directory.
-		for _, path := range filepath.SplitList(build.Default.GOPATH) {
-			path = filepath.Join(path, "src/azul3d.org/examples.v1")
-			if _, err := os.Stat(path); err == nil {
-				examplesDir = path
-				break
-			}
-		}
-	}
-	return filepath.Join(examplesDir, relPath)
-}
 
 // setOrthoScale sets teh camera's projection matrix to an orthographic one
 // using the given viewing rectangle. It performs scaling with the viewing
@@ -169,7 +147,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 }
 
 var (
-	defaultMapFile = absPath("azul3d_tmx/data/test_base64.tmx")
+	defaultMapFile = abs.Path("azul3d_tmx/data/test_base64.tmx")
 	mapFile        = flag.String("file", defaultMapFile, "tmx map file to load")
 )
 
