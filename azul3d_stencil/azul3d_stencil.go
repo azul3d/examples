@@ -9,7 +9,6 @@ import (
 	"go/build"
 	"image"
 	_ "image/png"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
@@ -17,6 +16,7 @@ import (
 	"time"
 
 	"azul3d.org/gfx.v2-dev"
+	"azul3d.org/gfx.v2-dev/gfxutil"
 	"azul3d.org/gfx.v2-dev/window"
 	math "azul3d.org/lmath.v1"
 )
@@ -293,21 +293,10 @@ func gfxLoop(w window.Window, d gfx.Device) {
 		log.Fatal("Could not aquire a stencil buffer.")
 	}
 
-	// Loading shader files
-	glslVert, err := ioutil.ReadFile(absPath("azul3d_stencil/stencil.vert"))
+	// Read the GLSL shaders from disk.
+	shader, err := gfxutil.OpenShader(absPath("azul3d_stencil/stencil"))
 	if err != nil {
 		log.Fatal(err)
-	}
-	glslFrag, err := ioutil.ReadFile(absPath("azul3d_stencil/stencil.frag"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create a simple shader.
-	shader := gfx.NewShader("SimpleShader")
-	shader.GLSL = &gfx.GLSLSources{
-		Vertex:   glslVert,
-		Fragment: glslFrag,
 	}
 
 	// Create the background.
