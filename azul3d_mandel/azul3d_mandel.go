@@ -10,13 +10,13 @@ import (
 	"image"
 	"image/color"
 	"image/png"
-	"io/ioutil"
 	"log"
 	"math"
 	"os"
 	"path/filepath"
 
 	"azul3d.org/gfx.v2-dev"
+	"azul3d.org/gfx.v2-dev/gfxutil"
 	"azul3d.org/gfx.v2-dev/window"
 	"azul3d.org/keyboard.v1"
 	"azul3d.org/mouse.v1"
@@ -156,21 +156,10 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	// Create a new mandelbrot generator.
 	gen := newMandelGen(w, d)
 
-	// Loading shader files
-	glslVert, err := ioutil.ReadFile(absPath("azul3d_mandel/mandel.vert"))
+	// Read the GLSL shaders from disk.
+	shader, err := gfxutil.OpenShader(absPath("azul3d_mandel/mandel"))
 	if err != nil {
 		log.Fatal(err)
-	}
-	glslFrag, err := ioutil.ReadFile(absPath("azul3d_mandel/mandel.frag"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create a simple shader.
-	shader := gfx.NewShader("SimpleShader")
-	shader.GLSL = &gfx.GLSLSources{
-		Vertex:   glslVert,
-		Fragment: glslFrag,
 	}
 
 	// Create a card mesh.
