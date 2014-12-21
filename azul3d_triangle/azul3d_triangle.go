@@ -10,12 +10,12 @@ import (
 	"go/build"
 	"image"
 	"image/png"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 
 	"azul3d.org/gfx.v2-dev"
+	"azul3d.org/gfx.v2-dev/gfxutil"
 	"azul3d.org/gfx.v2-dev/window"
 	"azul3d.org/keyboard.v1"
 	math "azul3d.org/lmath.v1"
@@ -67,21 +67,10 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	// object).
 	camera.SetPos(math.Vec3{0, -2, 0})
 
-	// Loading shader files
-	glslVert, err := ioutil.ReadFile(absPath("azul3d_triangle/triangle.vert"))
+	// Read the GLSL shaders from disk.
+	shader, err := gfxutil.OpenShader(absPath("azul3d_triangle/triangle"))
 	if err != nil {
 		log.Fatal(err)
-	}
-	glslFrag, err := ioutil.ReadFile(absPath("azul3d_triangle/triangle.frag"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create a simple shader.
-	shader := gfx.NewShader("SimpleShader")
-	shader.GLSL = &gfx.GLSLSources{
-		Vertex:   glslVert,
-		Fragment: glslFrag,
 	}
 
 	// Initialize the triangle mesh.
