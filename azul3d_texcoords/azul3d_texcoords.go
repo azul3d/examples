@@ -7,7 +7,6 @@ package main
 
 import (
 	"go/build"
-	"image"
 	_ "image/png"
 	"log"
 	"os"
@@ -58,22 +57,11 @@ func gfxLoop(w window.Window, d gfx.Device) {
 		log.Fatal(err)
 	}
 
-	// Load the picture.
-	f, err := os.Open(absPath("azul3d_texcoords/texture_coords_1024x1024.png"))
+	// Open the texture.
+	tex, err := gfxutil.OpenTexture(absPath("azul3d_texcoords/texture_coords_1024x1024.png"))
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	img, _, err := image.Decode(f)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create new texture.
-	tex := gfx.NewTexture()
-	tex.Source = img
-	tex.MinFilter = gfx.LinearMipmapLinear
-	tex.MagFilter = gfx.Linear
 	tex.Format = gfx.DXT1RGBA
 
 	// Create a card mesh.
