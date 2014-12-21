@@ -7,7 +7,6 @@ package main
 
 import (
 	"go/build"
-	"image"
 	_ "image/png"
 	"log"
 	"math/rand"
@@ -75,27 +74,15 @@ func cardTexCoords(u, v, s, t float32) []gfx.TexCoord {
 }
 
 func createPicture(d gfx.Device, path string) *gfx.Object {
-	// Load the picture.
-	f, err := os.Open(path)
+	// Open the texture.
+	tex, err := gfxutil.OpenTexture(path)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	img, _, err := image.Decode(f)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create new texture and ask the device to load it.
-	tex := gfx.NewTexture()
-	tex.Source = img
-	tex.MinFilter = gfx.LinearMipmapLinear
-	tex.MagFilter = gfx.Linear
-	tex.Format = gfx.DXT1
-	aspect := float32(img.Bounds().Dx()) / float32(img.Bounds().Dy())
-	var height float32 = 1.0
 
 	// Create a card object.
+	aspect := float32(tex.Bounds.Dx()) / float32(tex.Bounds.Dy())
+	var height float32 = 1.0
 	cardMesh := cardMesh(aspect, height)
 	cardMesh.TexCoords = []gfx.TexCoordSet{
 		{
@@ -123,40 +110,8 @@ func shapeTexCoords(index int) []gfx.TexCoord {
 }
 
 var (
-	texCache       = make(map[string]*gfx.Texture)
 	shapeMeshCache = make(map[int]*gfx.Mesh)
 )
-
-func loadTex(path string) *gfx.Texture {
-	// Check if that texture is already loaded.
-	tex, ok := texCache[path]
-	if ok {
-		return tex
-	}
-
-	// Load the image.
-	f, err := os.Open(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Decode the image.
-	img, _, err := image.Decode(f)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create new texture.
-	tex = gfx.NewTexture()
-	tex.Source = img
-	tex.MinFilter = gfx.LinearMipmapLinear
-	tex.MagFilter = gfx.Linear
-	tex.Format = gfx.DXT1RGBA
-
-	// Cache for later and return.
-	texCache[path] = tex
-	return tex
-}
 
 func loadShapeMesh(which int) *gfx.Mesh {
 	// Check if that texture is already loaded.
@@ -181,7 +136,16 @@ func loadShapeMesh(which int) *gfx.Mesh {
 func createShape(d gfx.Device, path string, which int) *gfx.Object {
 	// Create the object.
 	card := gfx.NewObject()
-	card.Textures = []*gfx.Texture{loadTex(path)}
+
+	// Open the shape's texture.
+	tex, err := gfxutil.OpenTexture(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	tex.Format = gfx.DXT1RGBA
+	card.Textures = []*gfx.Texture{tex}
+
+	// Load the shape's mesh.
 	card.Meshes = []*gfx.Mesh{loadShapeMesh(which)}
 
 	// Set the card's state.
