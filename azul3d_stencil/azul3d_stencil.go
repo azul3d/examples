@@ -52,28 +52,6 @@ func cardTexCoords(u, v, s, t float32) []gfx.TexCoord {
 	}
 }
 
-func createPicture(d gfx.Device, path string) *gfx.Object {
-	// Open the texture.
-	tex, err := gfxutil.OpenTexture(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create a card object.
-	aspect := float32(tex.Bounds.Dx()) / float32(tex.Bounds.Dy())
-	var height float32 = 1.0
-	cardMesh := cardMesh(aspect, height)
-	cardMesh.TexCoords = []gfx.TexCoordSet{
-		{
-			Slice: cardTexCoords(0, 0, 1, 1),
-		},
-	}
-	card := gfx.NewObject()
-	card.Textures = []*gfx.Texture{tex}
-	card.Meshes = []*gfx.Mesh{cardMesh}
-	return card
-}
-
 func shapeTexCoords(index int) []gfx.TexCoord {
 	switch index {
 	case 0:
@@ -230,6 +208,40 @@ l:
 	shapes = append(shapes, shape)
 }
 
+// createBackground creates the background picture. The returned object has no
+// shader assigned to it.
+func createBackground() *gfx.Object {
+	// Open the background texture.
+	tex, err := gfxutil.OpenTexture(abs.Path("azul3d_stencil/yi_han_cheol.png"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Create a card object.
+	aspect := float32(tex.Bounds.Dx()) / float32(tex.Bounds.Dy())
+	var height float32 = 1.0
+	cardMesh := cardMesh(aspect, height)
+	cardMesh.TexCoords = []gfx.TexCoordSet{
+		{
+			Slice: cardTexCoords(0, 0, 1, 1),
+		},
+	}
+	card := gfx.NewObject()
+	card.Textures = []*gfx.Texture{tex}
+	card.Meshes = []*gfx.Mesh{cardMesh}
+
+	card.State.StencilTest = true
+	card.State.StencilFront = gfx.StencilState{
+		ReadMask:  0xFF,
+		Reference: 1,
+		Fail:      gfx.SZero,
+		DepthFail: gfx.SZero,
+		DepthPass: gfx.SKeep,
+		Cmp:       gfx.Equal,
+	}
+	return card
+}
+
 // gfxLoop is responsible for drawing things to the window.
 func gfxLoop(w window.Window, d gfx.Device) {
 	// This example requires a stencil buffer, if we didn't get one from the
@@ -245,17 +257,8 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	}
 
 	// Create the background.
-	bgPicture := createPicture(d, abs.Path("azul3d_stencil/yi_han_cheol.png"))
+	bgPicture := createBackground()
 	bgPicture.Shader = shader
-	bgPicture.State.StencilTest = true
-	bgPicture.State.StencilFront = gfx.StencilState{
-		ReadMask:  0xFF,
-		Reference: 1,
-		Fail:      gfx.SZero,
-		DepthFail: gfx.SZero,
-		DepthPass: gfx.SKeep,
-		Cmp:       gfx.Equal,
-	}
 
 	// Create a camera.
 	c := gfx.NewCamera()
