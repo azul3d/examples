@@ -72,6 +72,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	evMask := window.FramebufferResizedEvents
 	evMask |= window.CursorMovedEvents
 	evMask |= window.MouseEvents
+	evMask |= window.MouseScrolledEvents
 	evMask |= window.KeyboardTypedEvents
 
 	// Create a channel of events.
@@ -93,16 +94,11 @@ func gfxLoop(w window.Window, d gfx.Device) {
 				props.SetCursorGrabbed(!props.CursorGrabbed())
 				w.Request(props)
 			}
-			if ev.Button == mouse.Wheel && ev.State == mouse.ScrollForward {
-				// Zoom in, and update the camera.
-				camZoom -= camZoomSpeed
-				updateCamera()
-			}
-			if ev.Button == mouse.Wheel && ev.State == mouse.ScrollBack {
-				// Zoom out, and update the camera.
-				camZoom += camZoomSpeed
-				updateCamera()
-			}
+
+		case mouse.Scrolled:
+			// Zoom and update the camera.
+			camZoom += ev.Y * camZoomSpeed
+			updateCamera()
 
 		case window.CursorMoved:
 			if ev.Delta {
