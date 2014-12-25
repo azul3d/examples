@@ -250,6 +250,22 @@ func gfxLoop(w window.Window, d gfx.Device) {
 		log.Fatal("Could not aquire a stencil buffer.")
 	}
 
+	// Setup a camera using an orthographic projection.
+	camera := gfx.NewCamera()
+	camera.SetPos(math.Vec3{0, -2, 0})
+	camNear := 0.001
+	camFar := 100.0
+
+	// updateCamera is a function used to update the camera's projection taking
+	// into account the new window size.
+	updateCamera := func() {
+		bounds := d.Bounds()
+		xRatio := float64(bounds.Dx()) / float64(bounds.Dy())
+		m := math.Mat4Ortho(-xRatio, xRatio, -1, 1, camNear, camFar)
+		camera.Projection = gfx.ConvertMat4(m)
+	}
+	updateCamera()
+
 	// Read the GLSL shaders from disk.
 	shader, err := gfxutil.OpenShader(abs.Path("azul3d_stencil/stencil"))
 	if err != nil {
@@ -260,17 +276,19 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	bgPicture := createBackground()
 	bgPicture.Shader = shader
 
-	// Create a camera.
-	c := gfx.NewCamera()
-	c.SetPos(math.Vec3{0, -2, 0})
+	// We want to know when the framebuffer is resized so we can update our
+	// camera.
+	events := make(chan window.Event, 64)
+	w.Notify(events, window.FramebufferResizedEvents)
 
 	for {
-		updateShapes(d, shader, c)
+		// Handle each pending FramebufferResized event.
+		window.Poll(events, func(e window.Event) {
+			// The framebuffer was resized, so we update our camera now.
+			updateCamera()
+		})
 
-		bounds := d.Bounds()
-		xRatio := float64(bounds.Dx()) / float64(bounds.Dy())
-		m := math.Mat4Ortho(-xRatio, xRatio, -1, 1, 0.001, 100.0)
-		c.Projection = gfx.ConvertMat4(m)
+		updateShapes(d, shader, camera)
 
 		// Clear the color, depth, and stencil buffers.
 		d.Clear(d.Bounds(), gfx.Color{0, 0, 0, 1})
@@ -279,7 +297,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 
 		for _, shape := range shapes {
 			// Skip drawing of shapes that are dead.
-			if isDead(c, shape) {
+			if isDead(camera, shape) {
 				continue
 			}
 
@@ -294,11 +312,11 @@ func gfxLoop(w window.Window, d gfx.Device) {
 			shape.SetPos(shape.ConvertPos(v, gfx.LocalToWorld))
 
 			// Draw the shape.
-			d.Draw(d.Bounds(), shape, c)
+			d.Draw(d.Bounds(), shape, camera)
 		}
 
 		// Draw the background picture.
-		d.Draw(d.Bounds(), bgPicture, c)
+		d.Draw(d.Bounds(), bgPicture, camera)
 
 		// Render the whole frame.
 		d.Render()
