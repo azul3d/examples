@@ -20,7 +20,7 @@ import (
 
 // gfxLoop is responsible for drawing things to the window.
 func gfxLoop(w window.Window, d gfx.Device) {
-	// Setup a camera to use a perspective projection.
+	// Setup a camera using an orthographic projection.
 	camera := gfx.NewCamera()
 	camNear := 0.01
 	camFar := 1000.0
