@@ -308,7 +308,10 @@ func gfxLoop(w window.Window, d gfx.Device) {
 			// move the same speed no matter how large or small.
 			v = v.Mul(math.Vec3One.Div(shape.Scale()))
 
-			// Convert the position to world space.
+			// The vector, v, has the shape moving foward a bit relative to
+			// it's current rotation/etc, we convert the vector from the
+			// shape's local space (i.e. one-foot-forward) into world space (an
+			// actual point).
 			shape.SetPos(shape.ConvertPos(v, gfx.LocalToWorld))
 
 			// Draw the shape.
