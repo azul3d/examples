@@ -19,7 +19,7 @@ import (
 	"azul3d.org/examples.v1/abs"
 )
 
-// Creates and returns a card mesh.
+// cardMesh creates and returns a card mesh.
 func cardMesh(w, h float32) *gfx.Mesh {
 	m := gfx.NewMesh()
 	m.Vertices = []gfx.Vec3{
@@ -36,7 +36,8 @@ func cardMesh(w, h float32) *gfx.Mesh {
 	return m
 }
 
-// Returns a slice of texture coordinates for a card given u,v,s,t coordinates.
+// cardTexCoords returns a slice of texture coordinates for a card given
+// [u,v,s,t] texture coordinates.
 func cardTexCoords(u, v, s, t float32) []gfx.TexCoord {
 	return []gfx.TexCoord{
 		// Left triangle.
@@ -231,6 +232,8 @@ l:
 
 // gfxLoop is responsible for drawing things to the window.
 func gfxLoop(w window.Window, d gfx.Device) {
+	// This example requires a stencil buffer, if we didn't get one from the
+	// device then we simply exit.
 	if d.Precision().StencilBits == 0 {
 		log.Fatal("Could not aquire a stencil buffer.")
 	}
@@ -302,10 +305,12 @@ func gfxLoop(w window.Window, d gfx.Device) {
 func main() {
 	props := window.NewProps()
 	props.SetSize(720, 480)
-	props.SetPrecision(gfx.Precision{
-		RedBits: 8, GreenBits: 8, BlueBits: 8, AlphaBits: 0,
-		DepthBits:   24,
-		StencilBits: 8, // Need stencil buffer for this example!
-	})
+
+	// Here we will explicitly request a 8-bit stencil buffer, we must have a
+	// stencil buffer for this example to work properly!
+	p := window.DefaultProps.Precision()
+	p.StencilBits = 8
+	props.SetPrecision(p)
+
 	window.Run(gfxLoop, props)
 }
