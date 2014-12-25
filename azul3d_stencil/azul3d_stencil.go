@@ -52,6 +52,10 @@ func cardTexCoords(u, v, s, t float32) []gfx.TexCoord {
 	}
 }
 
+// shapeTexCoords returns the correct set of texture coordinates for a shape
+// index. The texture has four shapes (0, 1, 2, 3) so given an index we return
+// texture coordinates selecting the correct region (i.e. top left, bottom
+// right, etc) of the texture.
 func shapeTexCoords(index int) []gfx.TexCoord {
 	switch index {
 	case 0:
@@ -62,8 +66,9 @@ func shapeTexCoords(index int) []gfx.TexCoord {
 		return cardTexCoords(0, .5, .5, 1)
 	case 3:
 		return cardTexCoords(.5, .5, 1, 1)
+	default:
+		panic("never here")
 	}
-	panic("never here")
 }
 
 var (
