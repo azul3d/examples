@@ -73,6 +73,7 @@ func shapeTexCoords(index int) []gfx.TexCoord {
 
 var (
 	shapeMeshCache = make(map[int]*gfx.Mesh)
+	textureCache   = make(map[string]*gfx.Texture)
 )
 
 func loadShapeMesh(which int) *gfx.Mesh {
@@ -95,17 +96,31 @@ func loadShapeMesh(which int) *gfx.Mesh {
 	return m
 }
 
-func createShape(d gfx.Device, path string, which int) *gfx.Object {
-	// Create the object.
-	card := gfx.NewObject()
+// loadTexture loads the given image file and returns a texture. The result is
+// cached such that if you try to load the same image file twice, you only get
+// one texture pointer rather than two.
+func loadTexture(path string) *gfx.Texture {
+	// If the cache has the texture, return it.
+	tex, ok := textureCache[path]
+	if ok {
+		return tex
+	}
 
-	// Open the shape's texture.
+	// Cache does not have the texture, open it now and store it in the cache
+	// for later.
 	tex, err := gfxutil.OpenTexture(path)
 	if err != nil {
 		log.Fatal(err)
 	}
 	tex.Format = gfx.DXT1RGBA
-	card.Textures = []*gfx.Texture{tex}
+	textureCache[path] = tex
+	return tex
+}
+
+func createShape(d gfx.Device, path string, which int) *gfx.Object {
+	// Create the object.
+	card := gfx.NewObject()
+	card.Textures = []*gfx.Texture{loadTexture(path)}
 
 	// Load the shape's mesh.
 	card.Meshes = []*gfx.Mesh{loadShapeMesh(which)}
