@@ -125,29 +125,29 @@ func gfxLoop(w window.Window, d gfx.Device) {
 				// height.
 				camera.SetPersp(image.Rect(0, 0, ev.Width, ev.Height), camFOV, camNear, camFar)
 
-			case keyboard.TypedEvent:
-				switch ev.Rune {
-				case 's':
+			case keyboard.Typed:
+				switch ev.S {
+				case "s":
 					printSamples = !printSamples
-				case 'v':
+				case "v":
 					printInView = !printInView
 
-				case 'm':
+				case "m":
 					// Toggle MSAA now.
 					msaa := !d.MSAA()
 					d.SetMSAA(msaa)
 					fmt.Println("MSAA Enabled?", msaa)
 
-				case 'p':
+				case "p":
 					triMesh.Primitive = gfx.Points
 
-				case 't':
+				case "t":
 					triMesh.Primitive = gfx.Triangles
 
-				case 'l':
+				case "l":
 					triMesh.Primitive = gfx.Lines
 
-				case '1':
+				case "1":
 					// Take a screenshot.
 					fmt.Println("Writing screenshot to file...")
 					// Download the image from the graphics hardware and save
@@ -167,7 +167,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 					}
 					fmt.Println("Wrote texture to screenshot.png")
 
-				case '2':
+				case "2":
 					fmt.Println("toggle fullscreen")
 					props := w.Props()
 					props.SetFullscreen(!props.Fullscreen())

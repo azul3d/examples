@@ -145,8 +145,8 @@ func gfxLoop(w window.Window, d gfx.Device) {
 				// height.
 				camera.SetPersp(d.Bounds(), camFOV, camNear, camFar)
 
-			case keyboard.TypedEvent:
-				if ev.Rune == 'm' || ev.Rune == 'M' {
+			case keyboard.Typed:
+				if ev.S == "m" || ev.S == "M" {
 					// Toggle mipmapping.
 					if rtColor.MinFilter == gfx.LinearMipmapLinear {
 						rtColor.MinFilter = gfx.Linear

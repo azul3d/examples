@@ -87,7 +87,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 			// Update the camera's to account for the new width and height.
 			updateCamera()
 
-		case mouse.Event:
+		case mouse.ButtonEvent:
 			if ev.Button == mouse.Left && ev.State == mouse.Up {
 				// Toggle mouse grab.
 				props := w.Props()
@@ -106,14 +106,14 @@ func gfxLoop(w window.Window, d gfx.Device) {
 				camera.SetPos(camera.Pos().Add(p))
 			}
 
-		case keyboard.TypedEvent:
-			switch ev.Rune {
-			case 'm':
+		case keyboard.Typed:
+			switch ev.S {
+			case "m":
 				// Toggle MSAA now.
 				msaa := !d.MSAA()
 				d.SetMSAA(msaa)
 				fmt.Println("MSAA Enabled?", msaa)
-			case 'r':
+			case "r":
 				camera.SetPos(lmath.Vec3{0, -2, 0})
 			}
 		}

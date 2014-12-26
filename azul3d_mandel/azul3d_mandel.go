@@ -42,7 +42,7 @@ func (m *mandelGen) handle(e window.Event) {
 	case window.FramebufferResized:
 		m.bounds = image.Rect(0, 0, ev.Width, ev.Height)
 
-	case mouse.Event:
+	case mouse.ButtonEvent:
 		if ev.Button == mouse.Right && ev.State == mouse.Down {
 			m.resolution += 2
 			if m.resolution > 8 {
@@ -193,7 +193,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 		// Handle each pending event.
 		window.Poll(events, func(e window.Event) {
 			switch ev := e.(type) {
-			case mouse.Event:
+			case mouse.ButtonEvent:
 				// Toggle mouse grab when the user left clicks.
 				if ev.Button == mouse.Left && ev.State == mouse.Down {
 					props := w.Props()
@@ -201,8 +201,8 @@ func gfxLoop(w window.Window, d gfx.Device) {
 					w.Request(props)
 				}
 
-			case keyboard.TypedEvent:
-				if ev.Rune == 's' || ev.Rune == 'S' {
+			case keyboard.Typed:
+				if ev.S == "s" || ev.S == "S" {
 					log.Println("Writing texture to file...")
 
 					// Download the texture image from the graphics hardware

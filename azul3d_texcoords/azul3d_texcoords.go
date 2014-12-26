@@ -91,8 +91,8 @@ func gfxLoop(w window.Window, d gfx.Device) {
 				// height.
 				camera.SetOrtho(d.Bounds(), camNear, camFar)
 
-			case keyboard.TypedEvent:
-				if ev.Rune == 'm' || ev.Rune == 'M' {
+			case keyboard.Typed:
+				if ev.S == "m" || ev.S == "M" {
 					// Toggle mipmapping on the texture.
 					if tex.MinFilter == gfx.LinearMipmapLinear {
 						tex.MinFilter = gfx.Linear
