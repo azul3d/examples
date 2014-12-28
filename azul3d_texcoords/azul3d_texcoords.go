@@ -71,6 +71,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 
 	// Create a card object.
 	card := gfx.NewObject()
+	card.State = gfx.NewState()
 	card.AlphaMode = gfx.AlphaToCoverage
 	card.Shader = shader
 	card.Textures = []*gfx.Texture{tex}

@@ -181,6 +181,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 
 	// Create a card object.
 	card := gfx.NewObject()
+	card.State = gfx.NewState()
 	card.Shader = shader
 	card.Textures = []*gfx.Texture{tex}
 	card.Meshes = []*gfx.Mesh{cardMesh}

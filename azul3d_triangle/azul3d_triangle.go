@@ -91,6 +91,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	triangle := gfx.NewObject()
 	triangle.Shader = shader
 	triangle.OcclusionTest = true
+	triangle.State = gfx.NewState()
 	triangle.State.FaceCulling = gfx.NoFaceCulling
 	triangle.Meshes = []*gfx.Mesh{triMesh}
 

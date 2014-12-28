@@ -24,6 +24,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	fmt.Println("MaxTextureSize =", dev.MaxTextureSize)
 	fmt.Println("NPOT Textures =", dev.NPOT)
 	fmt.Println("AlphaToCoverage =", dev.AlphaToCoverage)
+	fmt.Println("DepthClamp =", dev.DepthClamp)
 
 	fmt.Printf("OpenGL: v%d.%d\n", dev.GL.MajorVersion, dev.GL.MinorVersion)
 	fmt.Printf("GLSL: v%d.%d\n", dev.GLSL.MajorVersion, dev.GLSL.MinorVersion)

@@ -117,6 +117,24 @@ func loadTexture(path string) *gfx.Texture {
 	return tex
 }
 
+var shapeState = &gfx.State{
+	AlphaMode:   gfx.AlphaToCoverage,
+	WriteRed:    false,
+	WriteGreen:  false,
+	WriteBlue:   false,
+	WriteAlpha:  false,
+	DepthWrite:  false,
+	StencilTest: true,
+	StencilFront: gfx.StencilState{
+		WriteMask: 0xFF,
+		Fail:      gfx.SReplace,
+		DepthFail: gfx.SReplace,
+		DepthPass: gfx.SReplace,
+		Cmp:       gfx.Always,
+		Reference: 1,
+	},
+}
+
 func createShape(d gfx.Device, path string, which int) *gfx.Object {
 	// Create the object.
 	card := gfx.NewObject()
@@ -126,23 +144,7 @@ func createShape(d gfx.Device, path string, which int) *gfx.Object {
 	card.Meshes = []*gfx.Mesh{loadShapeMesh(which)}
 
 	// Set the card's state.
-	card.State = gfx.State{
-		AlphaMode:   gfx.AlphaToCoverage,
-		WriteRed:    false,
-		WriteGreen:  false,
-		WriteBlue:   false,
-		WriteAlpha:  false,
-		DepthWrite:  false,
-		StencilTest: true,
-		StencilFront: gfx.StencilState{
-			WriteMask: 0xFF,
-			Fail:      gfx.SReplace,
-			DepthFail: gfx.SReplace,
-			DepthPass: gfx.SReplace,
-			Cmp:       gfx.Always,
-			Reference: 1,
-		},
-	}
+	card.State = shapeState
 	return card
 }
 
@@ -249,7 +251,7 @@ func createBackground() *gfx.Object {
 	card := gfx.NewObject()
 	card.Textures = []*gfx.Texture{tex}
 	card.Meshes = []*gfx.Mesh{cardMesh}
-
+	card.State = gfx.NewState()
 	card.State.StencilTest = true
 	card.State.StencilFront = gfx.StencilState{
 		ReadMask:  0xFF,

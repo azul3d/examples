@@ -98,6 +98,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 
 	// Create a card object.
 	card := gfx.NewObject()
+	card.State = gfx.NewState()
 	card.FaceCulling = gfx.NoFaceCulling
 	card.AlphaMode = gfx.AlphaToCoverage
 	card.Shader = shader
