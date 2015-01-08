@@ -26,8 +26,8 @@ func gfxLoop(w window.Window, d gfx.Device) {
 	fmt.Println("AlphaToCoverage =", dev.AlphaToCoverage)
 	fmt.Println("DepthClamp =", dev.DepthClamp)
 
-	fmt.Printf("OpenGL: v%d.%d\n", dev.GL.MajorVersion, dev.GL.MinorVersion)
-	fmt.Printf("GLSL: v%d.%d\n", dev.GLSL.MajorVersion, dev.GLSL.MinorVersion)
+	fmt.Println(dev.GL)
+	fmt.Println(dev.GLSL)
 	fmt.Println("GLSL MaxVaryingFloats =", dev.GLSL.MaxVaryingFloats)
 	fmt.Println("GLSL MaxVertexInputs =", dev.GLSL.MaxVertexInputs)
 	fmt.Println("GLSL MaxFragmentInputs =", dev.GLSL.MaxFragmentInputs)
