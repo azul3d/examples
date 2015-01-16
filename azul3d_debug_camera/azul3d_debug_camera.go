@@ -69,13 +69,13 @@ func setup(d gfx.Device) (*gfx.Camera, *gfx.Camera, *gfx.Object) {
 	}
 
 	camMain := gfx.NewCamera()
-	camMain.SetPersp(d.Bounds(), 75, 0.1, 100)
-	camMain.SetPos(lmath.Vec3{0, -5, 0})
+	camMain.SetPersp(d.Bounds(), 75, 1, 100)
+	camMain.SetPos(lmath.Vec3{0, -10, 0})
 
 	camSecondary := gfx.NewCamera()
 	camSecondary.SetPersp(d.Bounds(), 75, 0.1, 100)
-	camSecondary.SetPos(lmath.Vec3{10, -5, 10})
-	camSecondary.SetRot(lmath.Vec3{45, 0, 45})
+	camSecondary.SetPos(lmath.Vec3{7.5, -7.5, 7.5})
+	camSecondary.SetRot(lmath.Vec3{-45, 0, 45})
 
 	cubes := gfx.NewObject()
 	cubes.State = gfx.NewState()
@@ -95,9 +95,7 @@ func gfxLoopWindow1(w window.Window, d gfx.Device) {
 	camMain, _, cubes := setup(d)
 	for {
 		// Clear the entire area.
-		d.Clear(d.Bounds(), gfx.Color{1, 1, 1, 1})
-
-		cubes.SetRot(cubes.Rot().AddScalar(0.2))
+		d.Clear(d.Bounds(), gfx.Color{0, 0, 0, 1})
 
 		d.Draw(d.Bounds(), cubes, camMain)
 
@@ -111,9 +109,7 @@ func gfxLoopWindow2(w window.Window, d gfx.Device) {
 	camMain, camSecondary, cubes := setup(d)
 	for {
 		// Clear the entire area.
-		d.Clear(d.Bounds(), gfx.Color{1, 1, 1, 1})
-
-		cubes.SetRot(cubes.Rot().AddScalar(0.2))
+		d.Clear(d.Bounds(), gfx.Color{0, 0, 0, 1})
 
 		debug.DrawCamera(d, camMain, camSecondary)
 		d.Draw(d.Bounds(), cubes, camSecondary)
@@ -130,7 +126,7 @@ func main() {
 		props := window.NewProps()
 		props.SetTitle("Main camera {FPS}")
 		props.SetPos(0, 0)
-		props.SetSize(400, 300)
+		props.SetSize(640, 400)
 		w, r, err := window.New(props)
 		if err != nil {
 			log.Fatal(err)
@@ -138,8 +134,8 @@ func main() {
 
 		props = window.NewProps()
 		props.SetTitle("Observer {FPS}")
-		props.SetPos(400, 0)
-		props.SetSize(400, 300)
+		props.SetPos(640, 0)
+		props.SetSize(640, 400)
 		w2, r2, err := window.New(props)
 		if err != nil {
 			log.Fatal(err)
