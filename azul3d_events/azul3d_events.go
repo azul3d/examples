@@ -10,10 +10,10 @@ import (
 	"image"
 	"reflect"
 
-	"azul3d.org/gfx.v2-dev"
-	"azul3d.org/gfx.v2-dev/window"
-	"azul3d.org/keyboard.v2-dev"
-	"azul3d.org/mouse.v2-dev"
+	"azul3d.org/gfx.v2-unstable"
+	"azul3d.org/gfx.v2-unstable/window"
+	"azul3d.org/keyboard.v2-unstable"
+	"azul3d.org/mouse.v2-unstable"
 )
 
 // gfxLoop is responsible for drawing things to the window.
