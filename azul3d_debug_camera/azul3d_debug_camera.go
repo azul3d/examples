@@ -10,11 +10,11 @@ import (
 	"log"
 	"math"
 
-	"azul3d.org/gfx.v2-dev"
-	"azul3d.org/gfx.v2-dev/debug"
-	"azul3d.org/gfx.v2-dev/gfxutil"
-	"azul3d.org/gfx.v2-dev/window"
-	"azul3d.org/keyboard.v2-dev"
+	"azul3d.org/gfx.v2-unstable"
+	"azul3d.org/gfx.v2-unstable/debug"
+	"azul3d.org/gfx.v2-unstable/gfxutil"
+	"azul3d.org/gfx.v2-unstable/window"
+	"azul3d.org/keyboard.v2-unstable"
 	"azul3d.org/lmath.v1"
 )
 
