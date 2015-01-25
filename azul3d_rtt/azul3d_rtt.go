@@ -10,6 +10,7 @@ import (
 	"log"
 
 	"azul3d.org/gfx.v2-unstable"
+	"azul3d.org/gfx.v2-unstable/camera"
 	"azul3d.org/gfx.v2-unstable/gfxutil"
 	"azul3d.org/gfx.v2-unstable/window"
 	"azul3d.org/keyboard.v2-unstable"
@@ -20,15 +21,11 @@ import (
 
 // gfxLoop is responsible for drawing things to the window.
 func gfxLoop(w window.Window, d gfx.Device) {
-	// Setup a camera to use a perspective projection.
-	camera := gfx.NewCamera()
-	camFOV := 75.0
-	camNear := 0.0001
-	camFar := 1000.0
-	camera.SetPersp(d.Bounds(), camFOV, camNear, camFar)
+	// Create a new perspective (3D) camera.
+	cam := camera.New(d.Bounds())
 
 	// Move the camera back two units away from the card.
-	camera.SetPos(lmath.Vec3{0, -2, 0})
+	cam.SetPos(lmath.Vec3{0, -2, 0})
 
 	// Create a texture to hold the color data of our render-to-texture.
 	rtColor := gfx.NewTexture()
@@ -144,7 +141,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 			case window.FramebufferResized:
 				// Update the camera's projection matrix for the new width and
 				// height.
-				camera.SetPersp(d.Bounds(), camFOV, camNear, camFar)
+				cam.Update(d.Bounds())
 
 			case keyboard.Typed:
 				if ev.S == "m" || ev.S == "M" {
@@ -171,7 +168,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 		d.ClearDepth(d.Bounds(), 1.0)
 
 		// Draw the card.
-		d.Draw(d.Bounds(), card, camera)
+		d.Draw(d.Bounds(), card, cam)
 
 		// Render the frame.
 		d.Render()

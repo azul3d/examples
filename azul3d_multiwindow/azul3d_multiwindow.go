@@ -39,7 +39,6 @@ func main() {
 		for i := 0; i < 2; i++ {
 			props := window.NewProps()
 			props.SetTitle("Window {FPS}")
-			props.SetVSync(false)
 			w, r, err := window.New(props)
 			if err != nil {
 				log.Fatal(err)

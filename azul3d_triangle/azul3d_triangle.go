@@ -13,6 +13,7 @@ import (
 	"os"
 
 	"azul3d.org/gfx.v2-unstable"
+	"azul3d.org/gfx.v2-unstable/camera"
 	"azul3d.org/gfx.v2-unstable/gfxutil"
 	"azul3d.org/gfx.v2-unstable/window"
 	"azul3d.org/keyboard.v2-unstable"
@@ -22,9 +23,7 @@ import (
 )
 
 const (
-	camFOV  = 75.0
-	camNear = 0.0001
-	camFar  = 1000.0
+	camFar = 1000.0
 )
 
 var (
@@ -38,13 +37,12 @@ var (
 
 // gfxLoop is responsible for drawing things to the window.
 func gfxLoop(w window.Window, d gfx.Device) {
-	// Setup a camera to use a perspective projection.
-	camera := gfx.NewCamera()
-	camera.SetPersp(d.Bounds(), camFOV, camNear, camFar)
+	// Create a new perspective (3D) camera.
+	cam := camera.New(d.Bounds())
 
 	// Move the camera -2 on the Y axis (back two units away from the triangle
 	// object).
-	camera.SetPos(math.Vec3{0, -2, 0})
+	cam.SetPos(math.Vec3{0, -2, 0})
 
 	// Read the GLSL shaders from disk.
 	shader, err := gfxutil.OpenShader(abs.Path("azul3d_triangle/triangle"))
@@ -107,15 +105,11 @@ func gfxLoop(w window.Window, d gfx.Device) {
 
 	triangle.Transform.SetParent(left)
 
-	// Create an event mask for the events we are interested in.
-	evMask := window.FramebufferResizedEvents
-	evMask |= window.KeyboardTypedEvents
-
 	// Create a channel of events.
 	events := make(chan window.Event, 256)
 
 	// Have the window notify our channel whenever events occur.
-	w.Notify(events, evMask)
+	w.Notify(events, window.KeyboardTypedEvents|window.FramebufferResizedEvents)
 
 	for {
 		// Handle each pending event.
@@ -124,7 +118,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 			case window.FramebufferResized:
 				// Update the camera's projection matrix for the new width and
 				// height.
-				camera.SetPersp(image.Rect(0, 0, ev.Width, ev.Height), camFOV, camNear, camFar)
+				cam.Update(d.Bounds())
 
 			case keyboard.Typed:
 				switch ev.S {
@@ -253,7 +247,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 
 		// Draw the triangle to the screen.
 		bounds := d.Bounds()
-		d.Draw(bounds.Inset(50), triangle, camera)
+		d.Draw(bounds.Inset(50), triangle, cam)
 
 		// Render the whole frame.
 		d.Render()
@@ -280,7 +274,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 
 		// Print if the triangle's center is in the view of the camera.
 		if printInView {
-			proj, ok := camera.Project(triangle.Pos())
+			proj, ok := cam.Project(triangle.Pos())
 			fmt.Println("In view?", ok, proj)
 		}
 	}

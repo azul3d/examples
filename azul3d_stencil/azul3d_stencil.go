@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"azul3d.org/gfx.v2-unstable"
+	"azul3d.org/gfx.v2-unstable/camera"
 	"azul3d.org/gfx.v2-unstable/gfxutil"
 	"azul3d.org/gfx.v2-unstable/window"
 	math "azul3d.org/lmath.v1"
@@ -152,9 +153,9 @@ var shapes []*gfx.Object
 
 // Tells if the shape is within twice the window's size or not. We use twice
 // the size to account for the largeness of the shape.
-func isDead(camera *gfx.Camera, shape *gfx.Object) bool {
+func isDead(cam *camera.Camera, shape *gfx.Object) bool {
 	worldPos := shape.ConvertPos(shape.Pos(), gfx.LocalToWorld)
-	viewPos, _ := camera.Project(worldPos)
+	viewPos, _ := cam.Project(worldPos)
 	xValid := viewPos.X < 2 && viewPos.X > -2
 	yValid := viewPos.Y < 2
 	if !xValid || !yValid {
@@ -168,7 +169,7 @@ var (
 	other     = time.Tick(time.Second / 2)
 )
 
-func updateShapes(d gfx.Device, shader *gfx.Shader, camera *gfx.Camera) {
+func updateShapes(d gfx.Device, shader *gfx.Shader, cam *camera.Camera) {
 	// Butterfly.
 	which := 0
 
@@ -215,7 +216,7 @@ func updateShapes(d gfx.Device, shader *gfx.Shader, camera *gfx.Camera) {
 	i := 0
 l:
 	for i < n {
-		if isDead(camera, shapes[i]) {
+		if isDead(cam, shapes[i]) {
 			// Release object for re-use.
 			shapes[i].Destroy()
 
@@ -272,19 +273,19 @@ func gfxLoop(w window.Window, d gfx.Device) {
 		log.Fatal("Could not aquire a stencil buffer.")
 	}
 
-	// Setup a camera using an orthographic projection.
-	camera := gfx.NewCamera()
-	camera.SetPos(math.Vec3{0, -2, 0})
-	camNear := 0.001
-	camFar := 100.0
+	// Create a new orthographic (2D) camera.
+	cam := camera.NewOrtho(d.Bounds())
+
+	// Move the camera back two units away from the card.
+	cam.SetPos(math.Vec3{0, -2, 0})
 
 	// updateCamera is a function used to update the camera's projection taking
 	// into account the new window size.
 	updateCamera := func() {
 		bounds := d.Bounds()
 		xRatio := float64(bounds.Dx()) / float64(bounds.Dy())
-		m := math.Mat4Ortho(-xRatio, xRatio, -1, 1, camNear, camFar)
-		camera.Projection = gfx.ConvertMat4(m)
+		m := math.Mat4Ortho(-xRatio, xRatio, -1, 1, cam.Near, cam.Far)
+		cam.P = gfx.ConvertMat4(m)
 	}
 	updateCamera()
 
@@ -310,7 +311,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 			updateCamera()
 		})
 
-		updateShapes(d, shader, camera)
+		updateShapes(d, shader, cam)
 
 		// Clear the color, depth, and stencil buffers.
 		d.Clear(d.Bounds(), gfx.Color{0, 0, 0, 1})
@@ -319,7 +320,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 
 		for _, shape := range shapes {
 			// Skip drawing of shapes that are dead.
-			if isDead(camera, shape) {
+			if isDead(cam, shape) {
 				continue
 			}
 
@@ -337,11 +338,11 @@ func gfxLoop(w window.Window, d gfx.Device) {
 			shape.SetPos(shape.ConvertPos(v, gfx.LocalToWorld))
 
 			// Draw the shape.
-			d.Draw(d.Bounds(), shape, camera)
+			d.Draw(d.Bounds(), shape, cam)
 		}
 
 		// Draw the background picture.
-		d.Draw(d.Bounds(), bgPicture, camera)
+		d.Draw(d.Bounds(), bgPicture, cam)
 
 		// Render the whole frame.
 		d.Render()

@@ -11,17 +11,13 @@ import (
 	"math"
 
 	"azul3d.org/gfx.v2-unstable"
-	"azul3d.org/gfx.v2-unstable/debug"
+	"azul3d.org/gfx.v2-unstable/camera"
 	"azul3d.org/gfx.v2-unstable/gfxutil"
 	"azul3d.org/gfx.v2-unstable/window"
 	"azul3d.org/keyboard.v2-unstable"
 	"azul3d.org/lmath.v1"
 
 	"azul3d.org/examples.v1/abs"
-)
-
-var (
-	perspCamera = true
 )
 
 // cube returns a cube *gfx.Mesh at an offset from the origin
@@ -72,7 +68,7 @@ func cube(x, y float32) *gfx.Mesh {
 }
 
 // setup creates the cameras and cubes for both windows
-func setup(d gfx.Device) (*gfx.Camera, *gfx.Camera, *gfx.Object) {
+func setup(d gfx.Device) (camMain, camSecondary *camera.Camera, cubes *gfx.Object) {
 	// Load the shader.
 	shader, err := gfxutil.OpenShader(abs.Path("azul3d_debug_camera/cube"))
 	if err != nil {
@@ -80,14 +76,14 @@ func setup(d gfx.Device) (*gfx.Camera, *gfx.Camera, *gfx.Object) {
 	}
 
 	// Create and position both cameras.
-	camMain := gfx.NewCamera()
-	camSecondary := gfx.NewCamera()
-	camSecondary.SetPersp(d.Bounds(), 75, 0.1, 1000)
+	camMain = camera.New(d.Bounds())
+	camMain.Debug = true // Enable drawing camera as wireframe.
+	camSecondary = camera.New(d.Bounds())
 	camSecondary.SetPos(lmath.Vec3{10, -10, 10})
 	camSecondary.SetRot(lmath.Vec3{-45, 0, 45})
 
 	// Insert some cubes so we have something to look at.
-	cubes := gfx.NewObject()
+	cubes = gfx.NewObject()
 	cubes.State = gfx.NewState()
 	cubes.State.FaceCulling = gfx.BackFaceCulling
 	cubes.Shader = shader
@@ -97,11 +93,10 @@ func setup(d gfx.Device) (*gfx.Camera, *gfx.Camera, *gfx.Object) {
 			cubes.Meshes = append(cubes.Meshes, cube(float32(x)*1.5, float32(y)*1.5))
 		}
 	}
-
-	return camMain, camSecondary, cubes
+	return
 }
 
-func update(d gfx.Device, cubes *gfx.Object, camMain *gfx.Camera) {
+func update(d gfx.Device, cubes *gfx.Object, camMain *camera.Camera) {
 	// Clear the entire area.
 	d.Clear(d.Bounds(), gfx.Color{0, 0, 0, 1})
 	d.ClearDepth(d.Bounds(), 1.0)
@@ -113,26 +108,40 @@ func update(d gfx.Device, cubes *gfx.Object, camMain *gfx.Camera) {
 	// How much we want to add to the FOV and far clipping distance (pulsating).
 	add := math.Sin(float64(d.Clock().FrameCount())/20) * 25
 
-	if perspCamera {
-		// Set camera perspective and update the position of the camera in case
-		// we were previously using an orthographic camera.
-		camMain.SetPersp(d.Bounds(), 75+add, 1, 30+add)
-		camMain.SetPos(lmath.Vec3{0, -10, 0})
-	} else {
+	camMain.Near = 1
+	camMain.Far = 30 + add
+
+	if camMain.Ortho {
 		// Reduce the viewing area so the cubes don't get too small.
 		x := d.Bounds().Dx() / 48
 		y := d.Bounds().Dy() / 48
 
 		// Set camera position and orthographic projection settings.
-		camMain.SetOrtho(image.Rect(0, 0, x, y), 1, 30+add)
+		camMain.Update(image.Rect(0, 0, x, y))
 		camMain.SetPos(lmath.Vec3{-float64(x) / 2, -10, -float64(y) / 2})
+		return
 	}
+
+	// Set camera perspective and update the position of the camera in case
+	// we were previously using an orthographic camera.
+	camMain.FOV = 75 + add
+	camMain.Update(d.Bounds())
+	camMain.SetPos(lmath.Vec3{0, -10, 0})
 }
+
+// Used by one window(2) to signal to the other(1) the current camera mode.
+var camOrtho = make(chan bool, 1)
 
 // gfxLoopWindow1 runs the main camera window
 func gfxLoopWindow1(w window.Window, d gfx.Device) {
 	camMain, _, cubes := setup(d)
 	for {
+		select {
+		case ortho := <-camOrtho:
+			camMain.Ortho = ortho
+		default:
+		}
+
 		// Update the camera position, rotation etc (done in both windows).
 		update(d, cubes, camMain)
 		d.Draw(d.Bounds(), cubes, camMain)
@@ -144,37 +153,36 @@ func gfxLoopWindow1(w window.Window, d gfx.Device) {
 
 // gfxLoopWindow2 runs the second camera, observing the camera helper
 func gfxLoopWindow2(w window.Window, d gfx.Device) {
-	// Create an event mask for the events we are interested in.
-	evMask := window.KeyboardTypedEvents
-
-	// Create a channel of events.
+	// Have the window notify us whenever typing events occur.
 	events := make(chan window.Event, 256)
-
-	// Have the window notify our channel whenever events occur.
-	w.Notify(events, evMask)
+	w.Notify(events, window.KeyboardTypedEvents)
 
 	camMain, camSecondary, cubes := setup(d)
 	for {
-		// Handle each pending event.
-		window.Poll(events, func(e window.Event) {
+		select {
+		case e := <-events:
 			switch ev := e.(type) {
 			case keyboard.Typed:
 				switch ev.S {
 				case "t":
-					perspCamera = !perspCamera
+					camMain.Ortho = !camMain.Ortho
+					camOrtho <- camMain.Ortho
 				}
 			}
-		})
+		default:
+		}
 
 		// Update the camera position, rotation etc (done in both windows).
 		update(d, cubes, camMain)
 
-		debug.DrawCamera(d, camMain, camSecondary)
+		// Draw the first camera as seen by the secondary camera.
+		d.Draw(d.Bounds(), camMain.Object, camSecondary)
+
+		// Draw the cubes as seen by the secondary camera.
 		d.Draw(d.Bounds(), cubes, camSecondary)
 
 		// Render the whole frame.
 		d.Render()
-
 	}
 }
 

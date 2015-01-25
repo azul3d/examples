@@ -10,6 +10,7 @@ import (
 	"log"
 
 	"azul3d.org/gfx.v2-unstable"
+	"azul3d.org/gfx.v2-unstable/camera"
 	"azul3d.org/gfx.v2-unstable/gfxutil"
 	"azul3d.org/gfx.v2-unstable/window"
 	"azul3d.org/keyboard.v2-unstable"
@@ -20,14 +21,11 @@ import (
 
 // gfxLoop is responsible for drawing things to the window.
 func gfxLoop(w window.Window, d gfx.Device) {
-	// Setup a camera using an orthographic projection.
-	camera := gfx.NewCamera()
-	camNear := 0.01
-	camFar := 1000.0
-	camera.SetOrtho(d.Bounds(), camNear, camFar)
+	// Create a new orthographic (2D) camera.
+	cam := camera.NewOrtho(d.Bounds())
 
 	// Move the camera back two units away from the card.
-	camera.SetPos(lmath.Vec3{0, -2, 0})
+	cam.SetPos(lmath.Vec3{0, -2, 0})
 
 	// Read the GLSL shaders from disk.
 	shader, err := gfxutil.OpenShader(abs.Path("azul3d_texcoords/texcoords"))
@@ -90,7 +88,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 			case window.FramebufferResized:
 				// Update the camera's projection matrix for the new width and
 				// height.
-				camera.SetOrtho(d.Bounds(), camNear, camFar)
+				cam.Update(d.Bounds())
 
 			case keyboard.Typed:
 				if ev.S == "m" || ev.S == "M" {
@@ -117,7 +115,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 		d.ClearDepth(d.Bounds(), 1.0)
 
 		// Draw the textured card.
-		d.Draw(d.Bounds(), card, camera)
+		d.Draw(d.Bounds(), card, cam)
 
 		// Render the whole frame.
 		d.Render()

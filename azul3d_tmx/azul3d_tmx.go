@@ -13,6 +13,7 @@ import (
 	"log"
 
 	"azul3d.org/gfx.v2-unstable"
+	"azul3d.org/gfx.v2-unstable/camera"
 	"azul3d.org/gfx.v2-unstable/window"
 	"azul3d.org/keyboard.v2-unstable"
 	"azul3d.org/lmath.v1"
@@ -22,28 +23,26 @@ import (
 	"azul3d.org/examples.v1/abs"
 )
 
-// setOrthoScale sets teh camera's projection matrix to an orthographic one
+// setOrthoScale sets the camera's projection matrix to an orthographic one
 // using the given viewing rectangle. It performs scaling with the viewing
 // rectangle.
-func setOrthoScale(c *gfx.Camera, view image.Rectangle, scale, near, far float64) {
-	w := float64(view.Dx())
+func setOrthoScale(c *camera.Camera, view image.Rectangle, scale float64) {
+	w := float64(c.View.Dx())
 	w *= scale
 	w = float64(int((w / 2.0)))
 
-	h := float64(view.Dy())
+	h := float64(c.View.Dy())
 	h *= scale
 	h = float64(int((h / 2.0)))
 
-	m := lmath.Mat4Ortho(-w, w, -h, h, near, far)
-	c.Projection = gfx.ConvertMat4(m)
+	m := lmath.Mat4Ortho(-w, w, -h, h, c.Near, c.Far)
+	c.P = gfx.ConvertMat4(m)
 }
 
 // gfxLoop is responsible for drawing things to the window.
 func gfxLoop(w window.Window, d gfx.Device) {
-	// Setup a camera to use a perspective projection.
-	camera := gfx.NewCamera()
-	camNear := 0.01
-	camFar := 1000.0
+	// Create a new orthographic (2D) camera.
+	cam := camera.NewOrtho(d.Bounds())
 	camZoom := 1.0       // 1x zoom
 	camZoomSpeed := 0.01 // 0.01x zoom for each scroll wheel click.
 	camMinZoom := 0.1
@@ -53,14 +52,14 @@ func gfxLoop(w window.Window, d gfx.Device) {
 		if camZoom < camMinZoom {
 			camZoom = camMinZoom
 		}
-		setOrthoScale(camera, d.Bounds(), camZoom, camNear, camFar)
+		setOrthoScale(cam, d.Bounds(), camZoom)
 	}
 
 	// Update the camera now.
 	updateCamera()
 
 	// Move the camera back two units away from the card.
-	camera.SetPos(lmath.Vec3{0, -2, 0})
+	cam.SetPos(lmath.Vec3{0, -2, 0})
 
 	// Load TMX map file.
 	tmxMap, layers, err := tmx.LoadFile(*mapFile, nil)
@@ -97,13 +96,14 @@ func gfxLoop(w window.Window, d gfx.Device) {
 
 		case mouse.Scrolled:
 			// Zoom and update the camera.
-			camZoom += ev.Y * camZoomSpeed
+			camZoom -= ev.Y * camZoomSpeed
 			updateCamera()
 
 		case window.CursorMoved:
 			if ev.Delta {
 				p := lmath.Vec3{ev.X, 0, -ev.Y}
-				camera.SetPos(camera.Pos().Add(p))
+				p = p.MulScalar(camZoom)
+				cam.SetPos(cam.Pos().Add(p))
 			}
 
 		case keyboard.Typed:
@@ -114,7 +114,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 				d.SetMSAA(msaa)
 				fmt.Println("MSAA Enabled?", msaa)
 			case "r":
-				camera.SetPos(lmath.Vec3{0, -2, 0})
+				cam.SetPos(lmath.Vec3{0, -2, 0})
 			}
 		}
 	}
@@ -132,7 +132,7 @@ func gfxLoop(w window.Window, d gfx.Device) {
 			objects, ok := layers[layer.Name]
 			if ok {
 				for _, obj := range objects {
-					d.Draw(d.Bounds(), obj, camera)
+					d.Draw(d.Bounds(), obj, cam)
 				}
 			}
 		}
