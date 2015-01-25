@@ -16,6 +16,8 @@ import (
 	"azul3d.org/gfx.v2-unstable/window"
 	"azul3d.org/keyboard.v2-unstable"
 	"azul3d.org/lmath.v1"
+
+	"azul3d.org/examples.v1/abs"
 )
 
 var (
@@ -72,7 +74,7 @@ func cube(x, y float32) *gfx.Mesh {
 // setup creates the cameras and cubes for both windows
 func setup(d gfx.Device) (*gfx.Camera, *gfx.Camera, *gfx.Object) {
 	// Load the shader.
-	shader, err := gfxutil.OpenShader("cube")
+	shader, err := gfxutil.OpenShader(abs.Path("azul3d_debug_camera/cube"))
 	if err != nil {
 		log.Fatal(err)
 	}
