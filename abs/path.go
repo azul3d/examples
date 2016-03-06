@@ -9,9 +9,13 @@ import (
 	"go/build"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
-var examplesDir string
+var (
+	pathLock    sync.Mutex
+	examplesDir string
+)
 
 // Path returns the absolute path to a file given a relative one in the
 // examples directory:
@@ -21,6 +25,9 @@ var examplesDir string
 // This helper function is not an important concept to any of the examples, it
 // just allows the examples to be ran from any working directory.
 func Path(relPath string) string {
+	pathLock.Lock()
+	defer pathLock.Unlock()
+
 	if len(examplesDir) == 0 {
 		// Find assets directory.
 		for _, path := range filepath.SplitList(build.Default.GOPATH) {
