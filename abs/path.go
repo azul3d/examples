@@ -24,7 +24,7 @@ func Path(relPath string) string {
 	if len(examplesDir) == 0 {
 		// Find assets directory.
 		for _, path := range filepath.SplitList(build.Default.GOPATH) {
-			path = filepath.Join(path, "src/azul3d.org/examples.v1")
+			path = filepath.Join(path, "src/azul3d.org/examples")
 			if _, err := os.Stat(path); err == nil {
 				examplesDir = path
 				break
