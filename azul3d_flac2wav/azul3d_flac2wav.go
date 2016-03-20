@@ -76,9 +76,6 @@ func flac2wav(path string) error {
 	return nil
 }
 
-// helper functions.
-//
-
 // fileExists reports whether the given file or directory exists or not.
 func fileExists(path string) (bool, error) {
 	_, err := os.Stat(path)
