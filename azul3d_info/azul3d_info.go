@@ -56,5 +56,6 @@ func gfxLoop(w window.Window, d gfx.Device) {
 func main() {
 	props := window.NewProps()
 	props.SetVisible(false)
+	props.SetResizeRenderSync(false)
 	window.Run(gfxLoop, props)
 }
