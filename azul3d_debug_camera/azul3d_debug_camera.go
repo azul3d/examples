@@ -187,28 +187,32 @@ func gfxLoopWindow2(w window.Window, d gfx.Device) {
 }
 
 func main() {
+	// Routine for the Main Camera
 	go func() {
-		// Create our windows.
 		props := window.NewProps()
 		props.SetTitle("Main camera {FPS}")
-		props.SetPos(0, 0)
+		props.SetPos(0, 100)
 		props.SetSize(640, 400)
 		w, r, err := window.New(props)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		props = window.NewProps()
+		gfxLoopWindow1(w, r)
+	}()
+
+	// Routine for the Observer Camera
+	go func() {
+		props := window.NewProps()
 		props.SetTitle("Observer {FPS}")
-		props.SetPos(640, 0)
+		props.SetPos(640, 100)
 		props.SetSize(640, 400)
 		w2, r2, err := window.New(props)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		go gfxLoopWindow1(w, r)
-		go gfxLoopWindow2(w2, r2)
+		gfxLoopWindow2(w2, r2)
 	}()
 
 	// Enter the main loop.
